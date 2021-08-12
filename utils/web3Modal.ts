@@ -24,9 +24,7 @@ const addNetworkProviders = (chainData: Network) => {
       package: WalletConnectProvider,
       options: {
         rpc: {
-          1: `https://mainnet.infura.io/v3/3c072dd341bb4e45858038e146195ae1`,
           4: `https://rinkeby.infura.io/v3/3c072dd341bb4e45858038e146195ae1`,
-          42: `https://kovan.infura.io/v3/3c072dd341bb4e45858038e146195ae1`,
           137: "https://polygon-mainnet.infura.io/v3/3c072dd341bb4e45858038e146195ae1",
           80001:
             "https://polygon-mumbai.infura.io/v3/3c072dd341bb4e45858038e146195ae1",
@@ -36,7 +34,6 @@ const addNetworkProviders = (chainData: Network) => {
   }
 
   if (providersToAdd.includes("torus")) {
-    console.log("chainData for Torus provider: ", chainData);
     allProviders.torus = {
       // network: chainData.network,
       package: Torus,
@@ -48,7 +45,6 @@ const addNetworkProviders = (chainData: Network) => {
         },
         config: {
           buildEnv: "production",
-
           showTorusButton: true,
         },
       },

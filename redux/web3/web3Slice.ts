@@ -1,34 +1,22 @@
 import { createSlice, PayloadAction, Slice } from "@reduxjs/toolkit";
-import { ethers, Contract } from "ethers";
-import getEnvVars from "../../environment";
+import { ethers } from "ethers";
 import Web3Modal from "web3modal";
-
-const { spcAbi, daiAbi, daiAddress, spcAddress, rpcUrl } = getEnvVars();
+import { chainByNetworkId } from "../../utils/chain";
 
 export interface Web3State {
-  account?: string;
-  contracts: {
-    dai: Contract;
-    singlePlayerCommit: Contract;
-  };
   provider: any;
   isLoggedIn: boolean;
+  account?: string;
   web3Modal?: Web3Modal;
   chain?: Network;
 }
 
-const defaultProvider = ethers.getDefaultProvider(rpcUrl);
-console.log(defaultProvider);
+//TODO pretty way for default RPC for generic provider (used to read activities on app load)
+const defaultChain: Network = chainByNetworkId('137');
+const defaultProvider = ethers.getDefaultProvider(defaultChain.rpc_url);
+console.log('Default provider :', defaultProvider);
 
 const initialState: Web3State = {
-  contracts: {
-    dai: new ethers.Contract(daiAddress, daiAbi, defaultProvider),
-    singlePlayerCommit: new ethers.Contract(
-      spcAddress,
-      spcAbi,
-      defaultProvider
-    ),
-  },
   provider: defaultProvider,
   isLoggedIn: false,
 };
@@ -37,12 +25,6 @@ export const web3Slice: Slice = createSlice({
   name: "web3",
   initialState,
   reducers: {
-    updateContracts: (state, action) => {
-      state.contracts = {
-        ...state.contracts,
-        ...action.payload,
-      };
-    },
     updateProvider: (state, action) => {
       state.provider = action.payload;
     },

@@ -16,7 +16,7 @@ import useWeb3 from "./useWeb3";
 const useCommitment = () => {
   const dispatch = useAppDispatch();
   const { activities } = useActivities();
-  const { singlePlayerCommit } = useContracts();
+  const { spcContract } = useContracts();
   const { account } = useWeb3();
 
   const commitment: Commitment = useSelector(
@@ -32,7 +32,7 @@ const useCommitment = () => {
 
   const refreshCommitment = async () => {
     if (account) {
-      const commitment = await singlePlayerCommit.commitments(account);
+      const commitment = await spcContract.commitments(account);
       const _commitment: Commitment = parseCommitmentFromContract(commitment);
       dispatch(updateCommitment({ ..._commitment }));
     }

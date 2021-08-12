@@ -41,6 +41,9 @@ interface Network {
   rpc_url: string;
   block_explorer: string;
   hub_sort_order?: number;
+  spcAddress?: string;
+  daiAddress?: string;
+  linkAddress?: string;
 }
 
 type TransactionTypes =

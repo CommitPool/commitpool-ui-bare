@@ -6,6 +6,7 @@ import { formatActivities } from "../utils/commitment";
 import { Contract } from "ethers";
 
 import { updateActivities } from "../redux/commitpool/commitpoolSlice";
+import useContracts from "./useContracts";
 
 const useActivities = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -13,9 +14,7 @@ const useActivities = () => {
     (state: RootState) => state.commitpool.activities
   );
 
-  const spcContract: Contract = useSelector(
-    (state: RootState) => state.web3.contracts.singlePlayerCommit
-  );
+  const { spcContract } = useContracts();
 
   const [formattedActivities, setFormattedActivities] = useState<
     DropdownItem[]
@@ -27,31 +26,31 @@ const useActivities = () => {
 
   // Get activities from contract
   useEffect(() => {
-    const buildActivityArray = async () => {
-      const _activities: Activity[] = [];
-      let loading: boolean = true;
-      let index: number = 0;
-
-      while (loading) {
-        try {
-          const key = await spcContract.activityKeyList(index);
-          const activity = await spcContract.activities(key);
-          if (activity.exists && activity.allowed) {
-            const clone = Object.assign({}, activity);
-            clone.key = key;
-            clone.name = activity.name;
-            _activities.push(clone as Activity);
-          }
-          index++;
-        } catch (error) {
-          loading = false;
-        }
-      }
-
-      return _activities;
-    };
-
     if (spcContract && loading) {
+      const buildActivityArray = async () => {
+        const _activities: Activity[] = [];
+        let loading: boolean = true;
+        let index: number = 0;
+
+        while (loading) {
+          try {
+            const key = await spcContract.activityKeyList(index);
+            const activity = await spcContract.activities(key);
+            if (activity.exists && activity.allowed) {
+              const clone = Object.assign({}, activity);
+              clone.key = key;
+              clone.name = activity.name;
+              _activities.push(clone as Activity);
+            }
+            index++;
+          } catch (error) {
+            loading = false;
+          }
+        }
+
+        return _activities;
+      };
+
       buildActivityArray().then((array) => {
         console.log("ActivityArray: ", array);
         dispatch(updateActivities(array));

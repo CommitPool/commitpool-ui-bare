@@ -6,7 +6,6 @@ import {
   setLoggedIn,
   updateAccount,
   updateChain,
-  updateContracts,
   updateProvider,
   updateWeb3Modal,
   Web3State,
@@ -15,7 +14,7 @@ import {
   updateTransactions,
   TransactionState,
 } from "../redux/transactions/transactionSlice";
-import { Contract, ethers, Transaction } from "ethers";
+import { ethers, Transaction } from "ethers";
 import Web3Modal from "web3modal";
 import { supportedChains } from "../utils/chain";
 import {
@@ -30,8 +29,7 @@ const Web3Instance = () => {
   const transactions: TransactionState = useSelector(
     (state: RootState) => state.transactions
   );
-  const { account, provider, isLoggedIn } = web3;
-  const { dai, singlePlayerCommit } = web3.contracts;
+  const { account, provider, isLoggedIn, chain } = web3;
 
   const hasListeners: any = useRef(null);
 
@@ -87,25 +85,14 @@ const Web3Instance = () => {
 
     //TODO Timeout for Torus provider to populate the selectedAddress
     setTimeout(() => {
-      if (provider?.selectedAddress) {
+      if (web3?.provider?.selectedAddress) {
         console.log("Dispatching updated Web3 config");
         console.log("Provider: ", provider);
         console.log("Address: ", provider.selectedAddress);
-
-        const _dai: Contract = dai.connect(web3.getSigner());
-        const _singlePlayerCommit: Contract = singlePlayerCommit.connect(
-          web3.getSigner()
-        );
-        dispatch(updateProvider(provider));
+        dispatch(updateProvider(web3));
         dispatch(updateAccount(provider.selectedAddress));
         dispatch(updateChain(chain));
         dispatch(updateWeb3Modal(localWeb3Modal));
-        dispatch(
-          updateContracts({
-            dai: _dai,
-            singlePlayerCommit: _singlePlayerCommit,
-          })
-        );
         dispatch(setLoggedIn(true));
       }
     }, 2000);
@@ -165,11 +152,12 @@ const Web3Instance = () => {
 
   return {
     account,
-    provider,
-    requestWallet,
-    transactions,
+    chain,
     isLoggedIn,
+    provider,
+    transactions,
     getTransaction,
+    requestWallet,
     storeTransactionToState,
   };
 };
@@ -177,21 +165,23 @@ const Web3Instance = () => {
 const useWeb3 = () => {
   const {
     account,
-    provider,
+    chain,
     isLoggedIn,
+    provider,
     transactions,
-    requestWallet,
     getTransaction,
+    requestWallet,
     storeTransactionToState,
   } = Web3Instance();
 
   return {
     account,
-    provider,
+    chain,
     isLoggedIn,
+    provider,
     transactions,
-    requestWallet,
     getTransaction,
+    requestWallet,
     storeTransactionToState,
   };
 };
