@@ -1,52 +1,50 @@
 import { ethers } from "ethers";
 
-const getActivityName = (activityKey: string, activities: Activity[]): string => {
+const getActivityName = (
+  activityKey: string,
+  activities: Activity[]
+): string => {
   const activity = activities.find((activity) => activity.key === activityKey);
   return activity?.name || "";
 };
 
 const formatActivities = (activities: Activity[]): DropdownItem[] => {
   const formattedActivities = activities.map((act: Activity) => {
-      if (act.name === "Run") {
-        return {
-          label: "Run 🏃‍♂️",
-          value: act.key,
-        };
-      } else if (act.name === "Ride") {
-        return {
-          label: "Ride 🚲",
-          value: act.key,
-        };
-      } else {
-        return {
-          label: act.name,
-          value: act.key,
-        };
-      }
-    });
+    if (act.name === "Run") {
+      return {
+        label: "Run 🏃‍♂️",
+        value: act.key,
+      };
+    } else if (act.name === "Ride") {
+      return {
+        label: "Ride 🚲",
+        value: act.key,
+      };
+    } else {
+      return {
+        label: act.name,
+        value: act.key,
+      };
+    }
+  });
 
   return formattedActivities;
 };
 
-const parseCommitmentFromContract = (commitment: any): Commitment | undefined => {
-  try {
-    const _commitment: Commitment = {
-      activityKey: commitment.activityKey,
-      goalValue: Number.parseFloat(commitment.goalValue) / 100,
-      reportedValue: Number.parseFloat(commitment.reportedValue) / 100,
-      endTime: Number.parseFloat(commitment.endTime.toString()),
-      startTime: Number.parseFloat(commitment.startTime.toString()),
-      stake: Number.parseFloat(ethers.utils.formatEther(commitment.stake)),
-      exists: commitment.exists,
-      met: commitment.met,
-      unit: "mi",
-    };
-    console.log("Parsed commitment: ", _commitment);
-    return _commitment
-  } catch (e) {
-    console.log(e);
-    return undefined;
-  }
+const parseCommitmentFromContract = (commitment: any): Commitment => {
+  const _commitment: Commitment = {
+    activityKey: commitment.activityKey,
+    goalValue: Number.parseFloat(commitment.goalValue) / 100,
+    reportedValue: Number.parseFloat(commitment.reportedValue) / 100,
+    endTime: Number.parseFloat(commitment.endTime.toString()),
+    startTime: Number.parseFloat(commitment.startTime.toString()),
+    stake: Number.parseFloat(ethers.utils.formatEther(commitment.stake)),
+    exists: commitment.exists,
+    met: commitment.met,
+    unit: "mi",
+  };
+  console.log("Parsed commitment: ", _commitment);
+  return _commitment;
 };
 
 const validActivityKey = (

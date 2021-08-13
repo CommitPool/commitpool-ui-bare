@@ -31,7 +31,7 @@ const useCommitment = () => {
     getActivityName(commitment.activityKey, activities) || "";
 
   const refreshCommitment = async () => {
-    if (account) {
+    if (account && spcContract) {
       const commitment = await spcContract.commitments(account);
       const _commitment: Commitment = parseCommitmentFromContract(commitment);
       dispatch(updateCommitment({ ..._commitment }));

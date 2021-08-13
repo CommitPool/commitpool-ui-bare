@@ -11,7 +11,7 @@ export interface Web3State {
   chain?: Network;
 }
 
-//TODO pretty way for default RPC for generic provider (used to read activities on app load)
+//Polygon as default network
 const defaultChain: Network = chainByNetworkId('137');
 const defaultProvider = ethers.getDefaultProvider(defaultChain.rpc_url);
 console.log('Default provider :', defaultProvider);

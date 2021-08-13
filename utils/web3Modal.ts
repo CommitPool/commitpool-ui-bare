@@ -9,9 +9,10 @@ const isInjected = () => {
 };
 
 export const attemptInjectedChainData = () =>
-  isInjected() ? chainByID(window.ethereum.chainId) : chainByID("0x1");
+  isInjected() ? chainByID(window.ethereum.chainId) : chainByID("137");
 
 const addNetworkProviders = (chainData: Network) => {
+  console.log('ChainData: ', chainData);
   const allProviders: any = {};
   if (!chainData) {
     // this will fire if window.ethereum exists, but the user is on the wrong chain
@@ -24,7 +25,6 @@ const addNetworkProviders = (chainData: Network) => {
       package: WalletConnectProvider,
       options: {
         rpc: {
-          4: `https://rinkeby.infura.io/v3/3c072dd341bb4e45858038e146195ae1`,
           137: "https://polygon-mainnet.infura.io/v3/3c072dd341bb4e45858038e146195ae1",
           80001:
             "https://polygon-mumbai.infura.io/v3/3c072dd341bb4e45858038e146195ae1",

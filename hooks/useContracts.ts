@@ -12,8 +12,8 @@ const useContracts = () => {
   
   useEffect(() => {
     if (chain?.spcAddress && chain?.daiAddress) {
-      const dai = new ethers.Contract(chain.daiAddress, daiAbi, provider);
-      const spc = new ethers.Contract(chain.spcAddress, abi, provider);
+      const dai: Contract = new ethers.Contract(chain.daiAddress, daiAbi, provider);
+      const spc: Contract = new ethers.Contract(chain.spcAddress, abi, provider);
 
       setDaiContract(dai);
       setSpcContract(spc);
@@ -22,8 +22,8 @@ const useContracts = () => {
 
   useEffect(() => {
     if (provider?.getSigner() && daiContract && spcContract) {
-      const dai = daiContract.connect(provider.getSigner());
-      const spc = spcContract.connect(provider.getSigner());
+      const dai: Contract = daiContract.connect(provider.getSigner());
+      const spc: Contract = spcContract.connect(provider.getSigner());
 
       setDaiContract(dai);
       setSpcContract(spc);
