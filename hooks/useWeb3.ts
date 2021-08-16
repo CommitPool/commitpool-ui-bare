@@ -3,13 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAppDispatch } from "../redux/store";
 import {
-  setLoggedIn,
-  updateAccount,
-  updateChain,
-  updateContracts,
-  updateProvider,
-  updateWeb3Modal,
-  Web3State,
+  reset, setLoggedIn, updateAccount, updateChain, updateContracts, updateProvider, updateWeb3Modal, Web3State,
 } from "../redux/web3/web3Slice";
 import {
   updateTransactions,
@@ -50,11 +44,7 @@ const Web3Instance = () => {
 
     //Provideroptions will be false when e.g. MetaMask is connected to an unsupported network
     if (!providerOptions) {
-      dispatch(updateProvider(null));
-      dispatch(updateAccount(null));
-      dispatch(updateChain(null));
-      dispatch(updateWeb3Modal(defaultModal));
-      dispatch(setLoggedIn(false));
+      dispatch(reset({}));
       window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
       return;
     }

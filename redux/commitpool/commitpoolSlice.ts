@@ -44,6 +44,7 @@ export const commitpoolSlice: Slice = createSlice({
     updateStakeSet: (state, action: PayloadAction<boolean>) => {
       state.stakeSet = action.payload;
     },
+    reset: () => initialState,
   },
 });
 
@@ -53,6 +54,7 @@ export const {
   updateActivities,
   updateActivitySet,
   updateStakeSet,
+  reset,
 } = commitpoolSlice.actions;
 
 export default commitpoolSlice.reducer;
