@@ -17,7 +17,6 @@ import { Rubik_700Bold } from "@expo-google-fonts/rubik";
 import { Header } from "./components/";
 import {
   TestPage,
-  LandingPage,
   IntroPage,
   LoginPage,
   ActivityGoalPage,
@@ -43,35 +42,41 @@ const App = () => {
     return <AppLoading />;
   } else {
     return (
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <NavigationContainer>
-            <Stack.Navigator
-              initialRouteName="Test"
-              screenOptions={{
-                headerTitle: () => <Header />,
-                headerLeft: () => null,
-                headerShown: true,
-                headerTransparent: true,
-              }}
-            >
-              <Stack.Screen name="Login" component={LoginPage} />
-              <Stack.Screen name="Intro" component={IntroPage} />
-              <Stack.Screen name="ActivityGoal" component={ActivityGoalPage} />
-              <Stack.Screen
-                name="ActivitySource"
-                component={ActivitySourcePage}
-              />
-              <Stack.Screen name="Staking" component={StakingPage} />
-              <Stack.Screen name="Confirmation" component={ConfirmationPage} />
-              <Stack.Screen name="Track" component={TrackPage} />
-              <Stack.Screen name="Completion" component={CompletionPage} />
-              <Stack.Screen name="Faq" component={FaqPage} />
-              <Stack.Screen name="Test" component={TestPage} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </PersistGate>
-      </Provider>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <NavigationContainer>
+              <Stack.Navigator
+                initialRouteName="Confirmation"
+                screenOptions={{
+                  headerTitle: () => <Header />,
+                  headerLeft: () => null,
+                  headerShown: true,
+                  headerTransparent: true,
+                }}
+              >
+                <Stack.Screen name="Login" component={LoginPage} />
+                <Stack.Screen name="Intro" component={IntroPage} />
+                <Stack.Screen
+                  name="ActivityGoal"
+                  component={ActivityGoalPage}
+                />
+                <Stack.Screen
+                  name="ActivitySource"
+                  component={ActivitySourcePage}
+                />
+                <Stack.Screen name="Staking" component={StakingPage} />
+                <Stack.Screen
+                  name="Confirmation"
+                  component={ConfirmationPage}
+                />
+                <Stack.Screen name="Track" component={TrackPage} />
+                <Stack.Screen name="Completion" component={CompletionPage} />
+                <Stack.Screen name="Faq" component={FaqPage} />
+                <Stack.Screen name="Test" component={TestPage} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </PersistGate>
+        </Provider>
     );
   }
 };

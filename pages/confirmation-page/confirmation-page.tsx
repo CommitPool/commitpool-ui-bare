@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { StyleSheet, View, Image } from "react-native";
 
 import {
@@ -24,7 +24,7 @@ import useActivities from "../../hooks/useActivities";
 import useContracts from "../../hooks/useContracts";
 import useWeb3 from "../../hooks/useWeb3";
 import useStravaAthlete from "../../hooks/useStravaAthlete";
-import { Transaction } from "ethers";
+import { ethers, Transaction, providers } from "ethers";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -43,10 +43,13 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
 
   const { athlete } = useStravaAthlete();
 
-  const { account, storeTransactionToState } = useWeb3();
+  const { account, provider, storeTransactionToState, transactions } =
+    useWeb3();
   const { dai, singlePlayerCommit } = useContracts();
+  const [tx, setTx] = useState(null);
 
   console.log("Connected SPC contract: ", singlePlayerCommit);
+  console.log('Deposit And Commit TX in local sate: ', tx)
 
   const createCommitment = async () => {
     if (validCommitmentRequest(commitment, activities)) {
@@ -121,6 +124,22 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
       setPopUpVisible(true);
     }
   };
+
+  useEffect(() => {
+    const getTxFromChain = async () => {
+      // if (transactions.transactions.depositAndCommit) {
+      console.log(
+        "depositAndCommit tx found: ",
+        "0x521877a3bf0503a3c8044dce544e4e69b647a94b302b8cde4666f722a4f54b5e"
+      );
+      await provider
+        .getTransactionReceipt(
+          "0x521877a3bf0503a3c8044dce544e4e69b647a94b302b8cde4666f722a4f54b5e"
+        )
+        .then(setTx);
+    };
+    getTxFromChain();
+  }, [transactions]);
 
   return (
     <LayoutContainer>

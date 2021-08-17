@@ -66,9 +66,13 @@ const validActivityParameters = (
   return (
     validActivityKey(commitment, activities) &&
     validStartEndTimestamps(commitment) &&
-    commitment.goalValue > 0
+    validGoalValue(commitment.goalValue) 
   );
 };
+
+const validGoalValue = (goalValue: number): boolean => {
+  return goalValue > 1;
+}
 
 const validStartEndTimestamps = (commitment: Commitment): boolean => {
   const nowInSeconds = new Date().getTime() / 1000;
@@ -112,4 +116,5 @@ export {
   parseCommitmentFromContract,
   validCommitmentRequest,
   validActivityParameters,
+  validGoalValue,
 };

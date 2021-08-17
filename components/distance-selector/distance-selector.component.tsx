@@ -1,10 +1,11 @@
 import React from "react";
 import { useAppDispatch } from "../../redux/store";
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
-
 import { StyleSheet, View, TextInput } from "react-native";
+
 import { Text } from "..";
 import useCommitment from "../../hooks/useCommitment";
+import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
+import { validGoalValue } from "../../utils/commitment";
 
 interface DistanceSelector {
   text: string;
@@ -12,15 +13,15 @@ interface DistanceSelector {
 
 const DistanceSelector = ({ text }: DistanceSelector) => {
   const { commitment } = useCommitment();
-  const { goalValue }: { goalValue: number} = commitment
+  const { goalValue }: { goalValue: number } = commitment;
 
   const dispatch = useAppDispatch();
 
   const onDistanceInput = (value: string) => {
     const distance: number = Number.parseFloat(value);
-    if (!isNaN(distance) && distance > 0) {
+    if (!isNaN(distance) && validGoalValue(distance)) {
       dispatch(updateCommitment({ goalValue: distance }));
-    }
+    } 
   };
 
   return (
@@ -56,8 +57,8 @@ const styles = StyleSheet.create({
   },
   unitInput: {
     margin: 15,
-    flexDirection: "row"
-  }
+    flexDirection: "row",
+  },
 });
 
 export default DistanceSelector;
