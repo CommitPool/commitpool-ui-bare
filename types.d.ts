@@ -51,5 +51,5 @@ type TransactionTypes =
 
 type TransactionDetails = {
   methodCall: TransactionTypes;
-  txReceipt: Transaction;
+  tx: TransactionResponse | TransactionRequest;
 };

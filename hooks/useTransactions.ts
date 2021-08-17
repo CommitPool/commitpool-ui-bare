@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAppDispatch } from "../redux/store";
@@ -11,7 +11,11 @@ import {
   updateWeb3Modal,
   Web3State,
 } from "../redux/web3/web3Slice";
-import { Contract, ethers } from "ethers";
+import {
+  updateTransactions,
+  TransactionState,
+} from "../redux/transactions/transactionSlice";
+import { Contract, ethers, Transaction } from "ethers";
 import Web3Modal from "web3modal";
 import { supportedChains } from "../utils/chain";
 import {
@@ -19,12 +23,14 @@ import {
   deriveSelectedAddress,
   getProviderOptions,
 } from "../utils/web3Modal";
+import useWeb3 from "./useWeb3";
 
-const Web3Instance = () => {
+const Transactions = () => {
   const dispatch = useAppDispatch();
-  const web3: Web3State = useSelector((state: RootState) => state.web3);
-  const { account, provider, isLoggedIn } = web3;
-  const { dai, singlePlayerCommit } = web3.contracts;
+  const transactions: TransactionState = useSelector(
+    (state: RootState) => state.transactions
+  );
+  const { account, provider, isLoggedIn } = useWeb3();;
 
   const hasListeners: any = useRef(null);
 
@@ -105,12 +111,6 @@ const Web3Instance = () => {
   };
 
   useEffect(() => {
-    if (window.localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER")) {
-      connectProvider();
-    }
-  }, []);
-
-  useEffect(() => {
     const handleChainChange = () => {
       console.log("CHAIN CHANGE");
       connectProvider();
@@ -142,32 +142,35 @@ const Web3Instance = () => {
     return () => unsub();
   }, [provider]);
 
-  const requestWallet = async () => {
-    connectProvider();
+  const storeTransactionToState = (txDetails: TransactionDetails) => {
+    dispatch(updateTransactions(txDetails));
+  };
+
+  const getTransaction = (
+    methodCall: TransactionTypes
+  ): Transaction | undefined => {
+    return transactions.transactions[methodCall]?.tx || undefined;
   };
 
   return {
-    account,
-    provider,
-    requestWallet,
-    isLoggedIn,
+    transactions,
+    getTransaction,
+    storeTransactionToState,
   };
 };
 
-const useWeb3 = () => {
+const useTransactions = () => {
   const {
-    account,
-    provider,
-    isLoggedIn,
-    requestWallet,
-  } = Web3Instance();
+    transactions,
+    getTransaction,
+    storeTransactionToState,
+  } = Transactions();
 
   return {
-    account,
-    provider,
-    isLoggedIn,
-    requestWallet,
+    transactions,
+    getTransaction,
+    storeTransactionToState,
   };
 };
 
-export default useWeb3;
+export default useTransactions;

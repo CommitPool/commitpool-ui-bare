@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
 
 import {
   LayoutContainer,
@@ -24,7 +24,8 @@ import useActivities from "../../hooks/useActivities";
 import useContracts from "../../hooks/useContracts";
 import useWeb3 from "../../hooks/useWeb3";
 import useStravaAthlete from "../../hooks/useStravaAthlete";
-import { ethers, Transaction, providers } from "ethers";
+import { Transaction, providers } from "ethers";
+import useTransactions from "../../hooks/useTransactions";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -40,16 +41,19 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment } = useCommitment();
   const { activities } = useActivities();
-
   const { athlete } = useStravaAthlete();
-
-  const { account, provider, storeTransactionToState, transactions } =
-    useWeb3();
+  const { account, provider } = useWeb3();
+  const { getTransaction, storeTransactionToState, transactions } =
+    useTransactions();
   const { dai, singlePlayerCommit } = useContracts();
-  const [tx, setTx] = useState(null);
 
-  console.log("Connected SPC contract: ", singlePlayerCommit);
-  console.log('Deposit And Commit TX in local sate: ', tx)
+  const [awaitingTx, setAwaitingTx] = useState<boolean>(true);
+
+  const methodCall: TransactionTypes = "depositAndCommit";
+  let tx: any = getTransaction(methodCall);
+
+  //TODO txReceipt had transactionHash instead of hash
+  const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
 
   const createCommitment = async () => {
     if (validCommitmentRequest(commitment, activities)) {
@@ -81,22 +85,23 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             _commitmentParametersWithUserId._userId,
             { gasLimit: 5000000 }
           )
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) => {
             storeTransactionToState({
-              methodCall: "depositAndCommit",
-              txReceipt: receipt,
-            })
-          );
+              methodCall,
+              tx,
+            });
+            setAwaitingTx(true);
+          });
       } else {
         await dai
           .approve(
             singlePlayerCommit.address,
             _commitmentParametersWithUserId._stake
           )
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) =>
             storeTransactionToState({
               methodCall: "approve",
-              txReceipt: receipt,
+              tx,
             })
           );
         await singlePlayerCommit
@@ -110,14 +115,12 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             _commitmentParametersWithUserId._userId,
             { gasLimit: 5000000 }
           )
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) => {
             storeTransactionToState({
-              methodCall: "depositAndCommit",
-              txReceipt: receipt,
-            })
-          )
-          .then(() => {
-            navigation.navigate("Track");
+              methodCall,
+              tx,
+            });
+            setAwaitingTx(true);
           });
       }
     } else {
@@ -125,21 +128,44 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
     }
   };
 
+  //Check Tx state on chain and if not picked up by miner set to monitor tx
   useEffect(() => {
-    const getTxFromChain = async () => {
-      // if (transactions.transactions.depositAndCommit) {
-      console.log(
-        "depositAndCommit tx found: ",
-        "0x521877a3bf0503a3c8044dce544e4e69b647a94b302b8cde4666f722a4f54b5e"
-      );
-      await provider
-        .getTransactionReceipt(
-          "0x521877a3bf0503a3c8044dce544e4e69b647a94b302b8cde4666f722a4f54b5e"
-        )
-        .then(setTx);
+    const getTxReceiptFromChain = async () => {
+      if (awaitingTx && tx?.hash) {
+        console.log(
+          "depositAndCommit tx found: ",
+          tx.hash
+        );
+        await provider
+          .waitForTransaction(
+            tx.hash,
+            1
+          )
+          .then((tx) => {
+            console.log("TX FOUND: ", tx);
+            storeTransactionToState({ methodCall, tx });
+          });
+      }
     };
-    getTxFromChain();
-  }, [transactions]);
+
+    getTxReceiptFromChain();
+  }, [awaitingTx, tx]);
+
+  //TODO Tx failed Toast
+  useEffect(() => {
+    console.log("FOUND UPDATED TX: ", tx);
+    const status = tx?.status;
+    console.log("STATUS: ", status);
+    if (status === 0) {
+      console.log("something went wrong: ");
+      console.log(`https://polygonscan.com/tx/${tx.transactionHash}`)
+      setAwaitingTx(false);
+    } else if (status === 1) {
+      console.log("tx mined succesfully: ", txUrl);
+      setAwaitingTx(false);
+      navigation.navigate("Track");
+    }
+  }, [tx]);
 
   return (
     <LayoutContainer>
@@ -149,33 +175,49 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
         text={strings.confirmation.alert}
       />
       <ProgressBar size={4 / 6} />
-      <Fragment>
-        <Text
-          text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
-        />
-        <Image
-          style={styles.tinyAvatar}
-          source={{ uri: athlete?.profile_medium }}
-        />
-      </Fragment>
-      <View style={styles.commitmentOverview}>
-        <CommitmentOverview editing={editMode} />
-        {editMode ? (
-          <Button
-            text="Set"
-            onPress={() => {
-              setEditMode(false);
-            }}
-          />
-        ) : (
-          <Button
-            text="Edit"
-            onPress={() => {
-              setEditMode(true);
-            }}
-          />
-        )}
-      </View>
+      {awaitingTx ? (
+        <Fragment>
+          <Text text="Awaiting transaction processing" />
+          <ActivityIndicator size="large" color="#ffffff" />
+          <a
+            style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
+            href={txUrl}
+            target="_blank"
+          >
+            View transaction on Polygonscan
+          </a>
+        </Fragment>
+      ) : (
+        <Fragment>
+          <Fragment>
+            <Text
+              text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
+            />
+            <Image
+              style={styles.tinyAvatar}
+              source={{ uri: athlete?.profile_medium }}
+            />
+          </Fragment>
+          <View style={styles.commitmentOverview}>
+            <CommitmentOverview editing={editMode} />
+            {editMode ? (
+              <Button
+                text="Set"
+                onPress={() => {
+                  setEditMode(false);
+                }}
+              />
+            ) : (
+              <Button
+                text="Edit"
+                onPress={() => {
+                  setEditMode(true);
+                }}
+              />
+            )}
+          </View>
+        </Fragment>
+      )}
       <Footer>
         <Button
           text={strings.footer.back}

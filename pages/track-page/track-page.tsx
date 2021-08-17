@@ -21,6 +21,7 @@ import useContracts from "../../hooks/useContracts";
 import useWeb3 from "../../hooks/useWeb3";
 import useStravaAthlete from "../../hooks/useStravaAthlete";
 import useStravaData from "../../hooks/useStravaData";
+import useTransactions from "../../hooks/useTransactions";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -37,9 +38,10 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   const { activities } = useActivities();
   const { commitment, activityName, refreshCommitment } = useCommitment();
   const { singlePlayerCommit } = useContracts();
-  const { account, storeTransactionToState, getTransaction } = useWeb3();
+  const { account } = useWeb3();
   const { athlete, stravaIsLoggedIn } = useStravaAthlete();
   const { progress } = useStravaData();
+  const { transactions, getTransaction, storeTransactionToState } = useTransactions();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
   const tx: Transaction | undefined = getTransaction(methodCall);
@@ -65,11 +67,11 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
           "9ce5c4e09dda4c3687bac7a2f676268f",
           { gasLimit: 500000 }
         )
-        .then((txReceipt: Transaction) => {
-          console.log("requestActivityDistanceTX receipt: ", txReceipt);
+        .then((tx: Transaction) => {
+          console.log("requestActivityDistanceTX receipt: ", tx);
           storeTransactionToState({
             methodCall,
-            txReceipt,
+            tx,
           });
         });
     }
