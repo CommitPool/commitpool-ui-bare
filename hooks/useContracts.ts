@@ -12,15 +12,15 @@ const useContracts = () => {
   const [spcContract, setSpcContract] = useState<Contract>();
 
   useEffect(() => {
-    if (chain.daiAddress && chain.spcAddress && provider) {
+    if (chain && provider) {
       console.log("SETTING/UPDATING CONTRACTS");
       const dai: Contract = new ethers.Contract(
-        chain?.daiAddress,
+        chain.daiAddress,
         daiAbi,
         provider
       );
       const spc: Contract = new ethers.Contract(
-        chain?.spcAddress,
+        chain.spcAddress,
         abi,
         provider
       );
@@ -30,7 +30,7 @@ const useContracts = () => {
       setDaiContract(dai);
       setSpcContract(spc);
     }
-  }, [chain, provider]);
+  }, [provider]);
 
   // useEffect(() => {
   //   if (daiContract && spcContract) {

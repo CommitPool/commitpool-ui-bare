@@ -32,11 +32,11 @@ type LoginPageProps = {
 const LoginPage = ({ navigation }: LoginPageProps) => {
   const dispatch = useAppDispatch();
 
-  const { account, isLoggedIn, requestWallet } = useWeb3();
+  const { account, provider, requestWallet } = useWeb3();
   const [popUpVisible, setPopUpVisible] = useState(false);
 
   const { stravaIsLoggedIn } = useStravaAthlete();
-  const { singlePlayerCommit } = useContracts();
+  const { spcContract } = useContracts();
 
   const { activitySet, stakeSet } = useSelector(
     (state: RootState) => state.commitpool
@@ -44,35 +44,35 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
 
   //When account has an commitment, write to state
   useEffect(() => {
-    const getCommitmentAndRoute = async () => {
-      console.log(`Checking for commitment for account ${account}`);
-      const commitment = await singlePlayerCommit.commitments(account);
-      console.log("Commitment from contract: ", commitment);
-      if (commitment.exists) {
-        const _commitment: Commitment | undefined = parseCommitmentFromContract(commitment);
-        if(_commitment){
-          dispatch(updateCommitment({ ..._commitment }));
-          navigation.navigate("Track");
+    if (account && ethers.utils.isAddress(account) && spcContract) {
+      const getCommitmentAndRoute = async () => {
+        console.log(`Checking for commitment for account ${account}`);
+        const commitment = await spcContract.commitments(account);
+        console.log("Commitment from contract: ", commitment);
+        if (commitment.exists) {
+          const _commitment: Commitment = parseCommitmentFromContract(commitment);
+          if(_commitment){
+            dispatch(updateCommitment({ ..._commitment }));
+            navigation.navigate("Track");
+          }
         }
-      }
-    };
+      };
 
-    if (account && ethers.utils.isAddress(account) && singlePlayerCommit) {
       getCommitmentAndRoute();
     }
-  }, [account, singlePlayerCommit]);
+  }, [account, spcContract]);
 
   const onNext = () => {
-    if (isLoggedIn && activitySet && stakeSet && stravaIsLoggedIn) {
+    if (account && activitySet && stakeSet && stravaIsLoggedIn) {
       //All parameters set, go to commitment confirmation screen
       navigation.navigate("Confirmation");
-    } else if (isLoggedIn && activitySet && stakeSet && !stravaIsLoggedIn) {
+    } else if (account && activitySet && stakeSet && !stravaIsLoggedIn) {
       //All parameters set, but need strava account data
       navigation.navigate("ActivitySource");
-    } else if (isLoggedIn) {
+    } else if (account) {
       //Wallet connected, go to commitment creation flow
       navigation.navigate("ActivityGoal");
-    } else if (!isLoggedIn) {
+    } else if (!account) {
       //Wallet not yet connected
       setPopUpVisible(true);
     }
@@ -86,7 +86,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
         text={strings.login.alert}
       />
       <View style={styles.loginPage}>
-        {isLoggedIn ? (
+        {account ? (
           <View>
             <Text text={`You're logged in to ${account}`} />
           </View>

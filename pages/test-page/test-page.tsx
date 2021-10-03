@@ -11,9 +11,6 @@ import { useAppDispatch } from "../../redux/store";
 import {
   reset as resetTransactions
 } from "../../redux/transactions/transactionSlice";
-import {
-  reset as resetWeb3
-} from "../../redux/web3/web3Slice";
 import strings from "../../resources/strings";
 
 type TestPageNavigationProps = StackNavigationProp<
@@ -31,7 +28,6 @@ const TestPage = ({ navigation }: TestPageProps) => {
   const clearStateAndRoute = () => {
     dispatch(resetCommitments({}));
     dispatch(resetTransactions({}));
-    dispatch(resetWeb3({}));
     navigation.navigate("ActivityGoal");
     window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
   }
