@@ -31,7 +31,9 @@ const formatActivities = (activities: Activity[]): DropdownItem[] => {
   return formattedActivities;
 };
 
-const parseCommitmentFromContract = (commitment: any): Commitment => {
+const parseCommitmentFromContract = (
+  commitment: any
+): Commitment => {
   const _commitment: Commitment = {
     activityKey: commitment.activityKey,
     goalValue: Number.parseFloat(commitment.goalValue) / 100,
