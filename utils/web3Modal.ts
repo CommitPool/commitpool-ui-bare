@@ -2,6 +2,9 @@ import Torus from "@toruslabs/torus-embed";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { chainByID, chainByNetworkId } from "./chain";
 
+//TODO Detect connected network and notify user to change to Polygon
+// Not it does not present the modal when on mainnet
+
 const isInjected = () => {
   const id = window.ethereum?.chainId;
   console.log("ID: ", id);

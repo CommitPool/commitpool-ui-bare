@@ -31,19 +31,20 @@ type TrackPageProps = {
   navigation: TrackPageNavigationProps;
 };
 
+//TODO Contr
 const TrackPage = ({ navigation }: TrackPageProps) => {
   // useStravaRefresh();
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
   const { activities } = useActivities();
   const { commitment, activityName, refreshCommitment } = useCommitment();
-  const { singlePlayerCommit } = useContracts();
+  const { spcContract } = useContracts();
   const { account, storeTransactionToState, getTransaction } = useWeb3();
   const { athlete, stravaIsLoggedIn } = useStravaAthlete();
   const { progress } = useStravaData();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
   const tx: Transaction | undefined = getTransaction(methodCall);
-  console.log("TX: ", tx)
+  console.log("TX: ", tx);
 
   //TODO manage URL smart when 'undefined'
   const stravaUrl: string = athlete?.id
@@ -56,8 +57,8 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   )?.oracle;
 
   const processCommitmentProgress = async () => {
-    if (singlePlayerCommit && account && oracleAddress) {
-      await singlePlayerCommit
+    if (spcContract && account && oracleAddress) {
+      await spcContract
         .requestActivityDistance(
           account,
           oracleAddress,
@@ -76,27 +77,29 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   };
 
   const listenForActivityDistanceUpdate = (
-    _singlePlayerCommit: Contract,
+    _singlePlayerCommit: Contract | undefined,
     commitment: Commitment
   ) => {
-    _singlePlayerCommit.on(
-      "RequestActivityDistanceFulfilled",
-      async (id: string, distance: BigNumber, committer: string) => {
-        const now = new Date().getTime() / 1000;
+    if (_singlePlayerCommit && commitment) {
+      _singlePlayerCommit.on(
+        "RequestActivityDistanceFulfilled",
+        async (id: string, distance: BigNumber, committer: string) => {
+          const now = new Date().getTime() / 1000;
 
-        if (committer.toLowerCase() === account?.toLowerCase()) {
-          if (now > commitment.endTime) {
-            refreshCommitment();
-            navigation.navigate("Completion");
-          } else {
-            setPopUpVisible(true);
+          if (committer.toLowerCase() === account?.toLowerCase()) {
+            if (now > commitment.endTime) {
+              refreshCommitment();
+              navigation.navigate("Completion");
+            } else {
+              setPopUpVisible(true);
+            }
           }
         }
-      }
-    );
+      );
+    }
   };
 
-  listenForActivityDistanceUpdate(singlePlayerCommit, commitment);
+  listenForActivityDistanceUpdate(spcContract, commitment);
 
   const onContinue = async () => {
     if (!tx) {
