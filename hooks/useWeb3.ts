@@ -10,16 +10,16 @@ import { ethers, Transaction } from "ethers";
 import Web3Modal from "web3modal";
 import {
   deriveChainId,
-  deriveSelectedAddress,
   getProviderOptions,
 } from "../utils/web3Modal";
-import { chainByNetworkId, chainByID } from "../utils/chain";
+import { chainByID } from "../utils/chain";
 
 
+//TODO now hardcoded to matic, should be flexible
 const Web3Instance = () => {
   const [provider, setProvider] = useState<any>();
   const [chain, setChain] = useState<Network>();
-  const [account, setAccount] =  useState<string>();
+  const [account, setAccount] = useState<string>();
   const transactions: TransactionState = useSelector(
     (state: RootState) => state.transactions
   );
@@ -27,6 +27,11 @@ const Web3Instance = () => {
   const hasListeners: any = useRef(null);
   const dispatch = useAppDispatch();
 
+  //set up default provider
+  useEffect(() => {
+    const defaultProvider = ethers.getDefaultProvider("https://polygon-mainnet.infura.io/v3/3c072dd341bb4e45858038e146195ae1");
+    setProvider(defaultProvider)
+  }, []);
 
   const connectProvider = async () => {
     const providerOptions = getProviderOptions();
@@ -46,16 +51,16 @@ const Web3Instance = () => {
 
     const provider: any = await web3Modal.connect();
     const chainId = await deriveChainId(provider);
-    console.log("CHAIN ID: ", chainId)
-    const chain = chainByID(chainId)
-    console.log("Chain: ", chain)
-    setChain(chain)
-    
+    console.log("CHAIN ID: ", chainId);
+    const chain = chainByID(chainId);
+    console.log("Chain: ", chain);
+    setChain(chain);
+
     console.log("connecting provider");
     const web3: any = new ethers.providers.Web3Provider(provider);
     console.log("web3: ", web3);
-    setProvider(web3)
-    setAccount(web3.provider.selectedAddress)
+    setProvider(web3);
+    setAccount(web3.provider.selectedAddress);
 
     // //TODO Timeout for Torus provider to populate the selectedAddress
     // setTimeout(() => {

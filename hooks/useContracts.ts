@@ -13,19 +13,18 @@ const useContracts = () => {
 
   useEffect(() => {
     if (chain && provider) {
-      console.log("SETTING/UPDATING CONTRACTS");
       const dai: Contract = new ethers.Contract(
         chain.daiAddress,
         daiAbi,
-        provider
+        provider.getSigner()
       );
       const spc: Contract = new ethers.Contract(
         chain.spcAddress,
         abi,
-        provider
+        provider.getSigner()
       );
 
-      console.log("SPC contract: ", spcContract);
+      console.log("SPC contract: ", spc);
 
       setDaiContract(dai);
       setSpcContract(spc);
