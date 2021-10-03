@@ -90,7 +90,7 @@ const validCommitmentRequest = (
 
 const getCommitmentRequestParameters = (commitment: Commitment) => {
   const _activityKey: string = commitment.activityKey;
-  const _goalValue: number = Math.floor(commitment.goalValue);
+  const _goalValue: number = Math.floor(commitment.goalValue) * 100;
   const _startTime: number = Math.ceil(commitment.startTime);
   const _endTime: number = Math.ceil(commitment.endTime);
   const _stake = ethers.utils.parseEther(commitment.stake.toString());
