@@ -8,7 +8,7 @@ export interface Web3State {
   isLoggedIn: boolean;
   account?: string;
   web3Modal?: Web3Modal;
-  chain?: Network;
+  chain: Network;
 }
 
 //Polygon as default network
@@ -19,6 +19,7 @@ console.log('Default provider :', defaultProvider);
 const initialState: Web3State = {
   provider: defaultProvider,
   isLoggedIn: false,
+  chain: defaultChain
 };
 
 export const web3Slice: Slice = createSlice({
@@ -40,13 +41,11 @@ export const web3Slice: Slice = createSlice({
     updateWeb3Modal: (state, action: PayloadAction<Web3Modal>) => {
       state.web3Modal = action.payload;
     },
-
     reset: () => initialState,
   },
 });
 
 export const {
-  updateContracts,
   updateProvider,
   updateAccount,
   updateChain,

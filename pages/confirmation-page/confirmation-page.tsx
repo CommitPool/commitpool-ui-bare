@@ -40,19 +40,15 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment } = useCommitment();
   const { activities } = useActivities();
-
   const { athlete } = useStravaAthlete();
-
   const { account, storeTransactionToState } = useWeb3();
-  const { dai, singlePlayerCommit } = useContracts();
-
-  console.log("Connected SPC contract: ", singlePlayerCommit);
+  const { daiContract, spcContract } = useContracts();
 
   const createCommitment = async () => {
-    if (validCommitmentRequest(commitment, activities)) {
-      const allowance = await dai.allowance(
+    if (validCommitmentRequest(commitment, activities) && spcContract && daiContract) {
+      const allowance = await daiContract.allowance(
         account,
-        singlePlayerCommit.address
+        spcContract.address
       );
 
       const _commitmentParameters = getCommitmentRequestParameters(commitment);
@@ -67,7 +63,8 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
       );
 
       if (allowance.gte(_commitmentParameters._stake)) {
-        await singlePlayerCommit
+        console.log("Submitting D&C tx")
+        await spcContract
           .depositAndCommit(
             _commitmentParametersWithUserId._activityKey,
             _commitmentParametersWithUserId._goalValue,
@@ -85,9 +82,11 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             })
           );
       } else {
-        await dai
+        console.log("Getting allowance with DAI contract: ", daiContract)
+
+        await daiContract
           .approve(
-            singlePlayerCommit.address,
+            spcContract.address,
             _commitmentParametersWithUserId._stake
           )
           .then((receipt: Transaction) =>
@@ -96,7 +95,9 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
               txReceipt: receipt,
             })
           );
-        await singlePlayerCommit
+
+        console.log("Calling D&C with SPC contract: ", spcContract)
+        await spcContract
           .depositAndCommit(
             _commitmentParametersWithUserId._activityKey,
             _commitmentParametersWithUserId._goalValue,

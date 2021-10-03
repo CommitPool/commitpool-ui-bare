@@ -3,7 +3,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAppDispatch } from "../redux/store";
 import {
-  reset, setLoggedIn, updateAccount, updateChain, updateContracts, updateProvider, updateWeb3Modal, Web3State,
+  reset,
+  setLoggedIn,
+  updateAccount,
+  updateChain,
+  updateContracts,
+  updateProvider,
+  updateWeb3Modal,
+  Web3State,
 } from "../redux/web3/web3Slice";
 import {
   updateTransactions,
@@ -20,11 +27,13 @@ import {
 
 const Web3Instance = () => {
   const dispatch = useAppDispatch();
-  const web3: Web3State = useSelector((state: RootState) => state.web3);
+  const { account, provider, isLoggedIn, chain } = useSelector(
+    (state: RootState) => state.web3
+  );
   const transactions: TransactionState = useSelector(
     (state: RootState) => state.transactions
   );
-  const { account, provider, isLoggedIn, chain } = web3;
+  // const { account, provider, isLoggedIn, chain } = web3;
 
   const hasListeners: any = useRef(null);
 
@@ -48,21 +57,13 @@ const Web3Instance = () => {
       return;
     }
 
-    const localWeb3Modal = new Web3Modal({
+    const web3Modal = new Web3Modal({
       providerOptions,
       cacheProvider: true,
       theme: "dark",
     });
 
-    const provider = await localWeb3Modal.connect().then(async (provider) => {
-      console.log("Provider after localWeb3Modal promise: ", provider);
-      provider.selectedAddress = await deriveSelectedAddress(provider);
-      console.log(
-        "Derived selected address in useWeb3Hook: ",
-        provider.selectedAddress
-      );
-      return provider;
-    });
+    const provider = await web3Modal.connect();
     const chainId = await deriveChainId(provider);
     console.log("ChainId: ", chainId);
 
@@ -74,19 +75,28 @@ const Web3Instance = () => {
     const web3: any = new ethers.providers.Web3Provider(provider);
     console.log("web3: ", web3);
 
-    //TODO Timeout for Torus provider to populate the selectedAddress
-    setTimeout(() => {
-      if (web3?.provider?.selectedAddress) {
-        console.log("Dispatching updated Web3 config");
-        console.log("Provider: ", provider);
-        console.log("Address: ", provider.selectedAddress);
-        dispatch(updateProvider(web3));
-        dispatch(updateAccount(provider.selectedAddress));
-        dispatch(updateChain(chain));
-        dispatch(updateWeb3Modal(localWeb3Modal));
-        dispatch(setLoggedIn(true));
-      }
-    }, 2000);
+    console.log("Dispatching updated Web3 config");
+    console.log("Provider: ", web3);
+    console.log("Address: ", web3.provider.selectedAddress);
+    dispatch(updateProvider(web3));
+    dispatch(updateAccount(web3.provider.selectedAddress));
+    dispatch(updateChain(chain));
+    dispatch(updateWeb3Modal(web3Modal));
+    dispatch(setLoggedIn(true));
+
+    // //TODO Timeout for Torus provider to populate the selectedAddress
+    // setTimeout(() => {
+    //   if (web3?.provider?.selectedAddress) {
+    //     console.log("Dispatching updated Web3 config");
+    //     console.log("Provider: ", web3);
+    //     console.log("Address: ", web3.provider.selectedAddress);
+    //     dispatch(updateProvider(web3));
+    //     dispatch(updateAccount(web3.provider.selectedAddress));
+    //     dispatch(updateChain(chain));
+    //     dispatch(updateWeb3Modal(web3Modal));
+    //     dispatch(setLoggedIn(true));
+    //   }
+    // }, 2000);
   };
 
   useEffect(() => {

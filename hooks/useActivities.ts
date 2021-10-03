@@ -9,24 +9,21 @@ import { updateActivities } from "../redux/commitpool/commitpoolSlice";
 import useContracts from "./useContracts";
 
 const useActivities = () => {
-  const [loading, setLoading] = useState<boolean>(true);
   const activities: Activity[] = useSelector(
     (state: RootState) => state.commitpool.activities
   );
 
   const { spcContract } = useContracts();
-
   const [formattedActivities, setFormattedActivities] = useState<
     DropdownItem[]
   >([]);
-
-  console.log("spcContract: ", spcContract);
 
   const dispatch = useAppDispatch();
 
   // Get activities from contract
   useEffect(() => {
-    if (spcContract && loading) {
+    if (formattedActivities.length === 0 && spcContract) {
+      console.log("GETTING ACTIVITIES")
       const buildActivityArray = async () => {
         const _activities: Activity[] = [];
         let loading: boolean = true;
@@ -54,18 +51,20 @@ const useActivities = () => {
       buildActivityArray().then((array) => {
         console.log("ActivityArray: ", array);
         dispatch(updateActivities(array));
-        setLoading(false);
-      });
+        setFormattedActivities(formatActivities(array))
+      }).catch(e => console.log("Error getting activities: ", e));
     }
   }, [spcContract]);
 
-  //Format activities for dropdown after retrieving from contract
-  useEffect(() => {
-    if (activities.length > 0) {
-      const _formattedActivities: DropdownItem[] = formatActivities(activities);
-      setFormattedActivities(_formattedActivities);
-    }
-  }, [activities]);
+  // //Format activities for dropdown after retrieving from contract
+  // useEffect(() => {
+  //   console.log("FORMATTING ACTIVITIES")
+  //   if (activities.length > 0) {
+  //     const _formattedActivities: DropdownItem[] = formatActivities(activities);
+  //     setFormattedActivities(_formattedActivities);
+  //     setLoading(false);
+  //   }
+  // }, [activities]);
 
   return { activities, formattedActivities };
 };

@@ -5,30 +5,44 @@ import useWeb3 from "./useWeb3";
 import daiAbi from "../resources/contracts/DaiToken.json";
 import abi from "../resources/contracts/SinglePlayerCommit.json";
 
+//TODO contracts keep refreshing
 const useContracts = () => {
   const { chain, provider } = useWeb3();
   const [daiContract, setDaiContract] = useState<Contract>();
   const [spcContract, setSpcContract] = useState<Contract>();
-  
+
   useEffect(() => {
-    if (chain?.spcAddress && chain?.daiAddress) {
-      const dai: Contract = new ethers.Contract(chain.daiAddress, daiAbi, provider);
-      const spc: Contract = new ethers.Contract(chain.spcAddress, abi, provider);
+    if (chain.daiAddress && chain.spcAddress && provider) {
+      console.log("SETTING/UPDATING CONTRACTS");
+      const dai: Contract = new ethers.Contract(
+        chain?.daiAddress,
+        daiAbi,
+        provider
+      );
+      const spc: Contract = new ethers.Contract(
+        chain?.spcAddress,
+        abi,
+        provider
+      );
+
+      console.log("SPC contract: ", spcContract);
 
       setDaiContract(dai);
       setSpcContract(spc);
     }
-  }, [chain]);
+  }, [chain, provider]);
 
-  useEffect(() => {
-    if (provider?.getSigner() && daiContract && spcContract) {
-      const dai: Contract = daiContract.connect(provider.getSigner());
-      const spc: Contract = spcContract.connect(provider.getSigner());
+  // useEffect(() => {
+  //   if (daiContract && spcContract) {
+  //     console.log("ADDING SIGNER TO CONTRACTS: ", provider.getSigner());
+  //     const dai: Contract = daiContract.connect(provider);
+  //     const spc: Contract = spcContract.connect(provider);
 
-      setDaiContract(dai);
-      setSpcContract(spc);
-    }
-  }, [provider]);
+  //     console.log("SIGNERS CONNECTED: ", dai);
+  //     setDaiContract(dai);
+  //     setSpcContract(spc);
+  //   }
+  // }, [provider]);
 
   return { daiContract, spcContract };
 };
