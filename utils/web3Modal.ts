@@ -4,6 +4,8 @@ import { chainByID, chainByNetworkId } from "./chain";
 
 //TODO Detect connected network and notify user to change to Polygon
 // Not it does not present the modal when on mainnet
+// Let app always connect provider to e.g. Polygon mainnet
+// If selected web3modal provider is MetaMask, but MM is on unsupported network, display network with error(box/modal/toast) to tell user to switch to supported network (Polygon Mainnet) and implement this flow using the MM RPC API to add/switch network: https://docs.metamask.io/guide/rpc-api.html#other-rpc-methods
 
 const isInjected = () => {
   const id = window.ethereum?.chainId;
