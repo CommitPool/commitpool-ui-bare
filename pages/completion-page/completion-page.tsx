@@ -7,10 +7,12 @@ import { RootStackParamList } from "..";
 import { StackNavigationProp } from "@react-navigation/stack";
 
 import strings from "../../resources/strings";
-import useCommitment from "../../hooks/useCommitment";
-import useContracts from "../../hooks/useContracts";
-import useWeb3 from "../../hooks/useWeb3";
 import { Contract, Transaction } from "ethers";
+import { TransactionTypes } from "../../types";
+import { useContracts } from "../../contexts/contractContext";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
+import { useCurrentUser } from "../../contexts/currentUserContext";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 type CompletionPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -22,10 +24,10 @@ type CompletionPageProps = {
 };
 
 const CompletionPage = ({ navigation }: CompletionPageProps) => {
-  const { commitment, activityName } = useCommitment();
-  const { singlePlayerCommit } = useContracts();
-  const { isLoggedIn, account, getTransaction, storeTransactionToState } =
-    useWeb3();
+  const { commitment } = useCommitPool();
+  const { spcContract } = useContracts();
+  const { currentUser } = useCurrentUser();
+  const { getTransaction, storeTransactionToState } = useInjectedProvider();
   const [loading, setLoading] = useState<boolean>(true);
   const [success, setSuccess] = useState<boolean>(false);
   const [txSent, setTxSent] = useState<boolean>(false);
@@ -36,7 +38,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   //Check is commitment was met
   useEffect(() => {
-    if (loading) {
+    if (loading && commitment?.reportedValue && commitment?.goalValue) {
       const _success: boolean =
         commitment.reportedValue > 0 &&
         commitment.reportedValue >= commitment.goalValue;
@@ -45,12 +47,12 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     }
   }, [commitment, loading]);
 
-  const achievement: string = `You managed to ${activityName} for ${commitment.reportedValue} miles. You committed to ${commitment.goalValue} miles`;
+  const achievement: string = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment.goalValue} miles`;
 
   const onProcess = async () => {
-    if (isLoggedIn) {
+    if (currentUser?.username && spcContract) {
       console.log("Web3 logged in, calling processCommitmentUser()");
-      await singlePlayerCommit
+      await spcContract
         .processCommitmentUser()
         .then((txReceipt: Transaction) => {
           console.log("processCommitmentUserTX receipt: ", txReceipt);
@@ -67,14 +69,16 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   };
 
   const listenForCommitmentSettlement = () => {
-    singlePlayerCommit.on(
-      "CommitmentEnded",
-      async (committer: string, met: boolean, amountPenalized: number) => {
-        if (committer.toLowerCase() === account?.toLowerCase()) {
-          navigation.navigate("ActivityGoal");
+    if (spcContract) {
+      spcContract.on(
+        "CommitmentEnded",
+        async (committer: string, met: boolean, amountPenalized: number) => {
+          if (committer.toLowerCase() === currentUser?.username?.toLowerCase()) {
+            navigation.navigate("ActivityGoal");
+          }
         }
-      }
-    );
+      );
+    }
   };
 
   listenForCommitmentSettlement();

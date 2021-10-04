@@ -14,13 +14,13 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import strings from "../../resources/strings";
 import { parseSecondTimestampToFullString } from "../../utils/dateTime";
 
-import useActivities from "../../hooks/useActivities";
 import { BigNumber, Contract, Transaction } from "ethers";
-import useCommitment from "../../hooks/useCommitment";
-import useContracts from "../../hooks/useContracts";
-import useWeb3 from "../../hooks/useWeb3";
-import useStravaAthlete from "../../hooks/useStravaAthlete";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { useContracts } from "../../contexts/contractContext";
+import { useStrava } from "../../contexts/stravaContext";
 import useStravaData from "../../hooks/useStravaData";
+import { Commitment, TransactionTypes } from "../../types";
+import { useCurrentUser } from "../../contexts/currentUserContext";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -35,16 +35,15 @@ type TrackPageProps = {
 const TrackPage = ({ navigation }: TrackPageProps) => {
   // useStravaRefresh();
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-  const { activities } = useActivities();
-  const { commitment, activityName, refreshCommitment } = useCommitment();
+  const { activities, commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  const { account, storeTransactionToState, getTransaction } = useWeb3();
-  const { athlete, stravaIsLoggedIn } = useStravaAthlete();
+  const { storeTransactionToState, getTransaction } = useWeb3();
+  const { athlete, isLoggedIn } = useStrava();
+  const { currentUser } = useCurrentUser();
   const { progress } = useStravaData();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
   const tx: Transaction | undefined = getTransaction(methodCall);
-  console.log("TX: ", tx);
 
   //TODO manage URL smart when 'undefined'
   const stravaUrl: string = athlete?.id
@@ -52,15 +51,15 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     : ``;
   const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
 
-  const oracleAddress: string | undefined = activities.find(
-    (activity) => activity.key === commitment.activityKey
+  const oracleAddress: string | undefined = activities?.find(
+    (activity) => activity.key === commitment?.activityKey
   )?.oracle;
 
   const processCommitmentProgress = async () => {
-    if (spcContract && account && oracleAddress) {
+    if (spcContract && currentUser?.username && oracleAddress) {
       await spcContract
         .requestActivityDistance(
-          account,
+          currentUser.username,
           oracleAddress,
           //to do - move to env and/or activity state
           "9ce5c4e09dda4c3687bac7a2f676268f",
@@ -86,9 +85,8 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         async (id: string, distance: BigNumber, committer: string) => {
           const now = new Date().getTime() / 1000;
 
-          if (committer.toLowerCase() === account?.toLowerCase()) {
+          if (committer.toLowerCase() === currentUser?.username?.toLowerCase()) {
             if (now > commitment.endTime) {
-              refreshCommitment();
               navigation.navigate("Completion");
             } else {
               setPopUpVisible(true);
@@ -130,31 +128,40 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         ) : (
           <Fragment>
             <Text text={strings.track.tracking.text} />
-            <View style={styles.commitmentValues}>
-              <Text
-                text={`${activityName} for ${commitment.goalValue} miles`}
-              />
-              <Text
-                text={`from ${parseSecondTimestampToFullString(
-                  commitment.startTime
-                )} to ${parseSecondTimestampToFullString(commitment.endTime)}`}
-              />
-            </View>
-            <View style={styles.commitmentValues}>
-              <Text
-                text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
-              />
-            </View>
-            <View style={styles.commitmentValues}>
-              <Text text={`Progression`} />
-              <ProgressCircle progress={progress} />
-            </View>
+            {commitment?.startTime &&
+            commitment?.endTime &&
+            commitment?.activityName ? (
+              <Fragment>
+                <View style={styles.commitmentValues}>
+                  <Text
+                    text={`${commitment.activityName} for ${commitment?.goalValue} miles`}
+                  />
+                  <Text
+                    text={`from ${parseSecondTimestampToFullString(
+                      commitment.startTime
+                    )} to ${parseSecondTimestampToFullString(
+                      commitment.endTime
+                    )}`}
+                  />
+                </View>
+
+                <View style={styles.commitmentValues}>
+                  <Text
+                    text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
+                  />
+                </View>
+                <View style={styles.commitmentValues}>
+                  <Text text={`Progression`} />
+                  <ProgressCircle progress={progress} />
+                </View>
+              </Fragment>
+            ) : undefined}
           </Fragment>
         )}
       </View>
 
       <View>
-        {stravaIsLoggedIn && athlete?.id !== undefined ? (
+        {isLoggedIn && athlete?.id ? (
           <a
             style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
             href={stravaUrl}

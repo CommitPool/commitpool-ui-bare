@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState, useAppDispatch } from "../redux/store";
-import axios from "axios";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Athlete } from "../types";
 
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -12,12 +10,23 @@ import {
   RevokeTokenRequestConfig,
   AuthSessionResult,
 } from "expo-auth-session";
+import axios from "axios";
 
-import {
-  logInStravaUser,
-  logOutStravaUser,
-  updateAccessToken,
-} from "../redux/strava/stravaSlice";
+type StravaContextType = {
+  athlete?: Athlete;
+  isLoggedIn: boolean;
+  handleStravaLogin: () => void
+};
+
+export const StravaContext = createContext<StravaContextType>({
+  athlete: undefined,
+  isLoggedIn: false,
+  handleStravaLogin: () => {},
+});
+
+interface StravaProps {
+  children: any;
+}
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -32,26 +41,16 @@ const discovery: DiscoveryDocument = {
   revocationEndpoint: "https://www.strava.com/oauth/deauthorize",
 };
 
-// endpoint for read-all activities. temporary token is added in getActivities()
-// const callActivities = `https://www.strava.com/api/v3/athlete/activities?access_token=`;
-
-const useStravaAthlete = () => {
-  const dispatch = useAppDispatch();
-
-  const {
-    isLoggedIn: stravaIsLoggedIn,
-    athlete,
-    refresh_token: refreshToken,
-    access_token: accessToken,
-  }: {
-    isLoggedIn: boolean;
-    refresh_token: string;
-    access_token: string;
-    athlete: Athlete;
-  } = useSelector((state: RootState) => state.strava);
+export const StravaContextProvider: React.FC<StravaProps> = ({
+  children,
+}: StravaProps) => {
+  const [athlete, setAthlete] = useState<Athlete>();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [refreshToken, setRefreshToken] = useState<any>();
+  const [accessToken, setAccessToken] = useState<any>();
 
   const handleStravaLogin = () => {
-    stravaIsLoggedIn ? logOutAndClearState() : stravaOauth();
+    isLoggedIn ? logOutAndClearState() : stravaOauth();
   };
 
   const logOutAndClearState = async () => {
@@ -60,7 +59,7 @@ const useStravaAthlete = () => {
 
       await revokeAsync(config, discovery);
 
-      dispatch(logOutStravaUser({}));
+      setIsLoggedIn(false);
     }
   };
 
@@ -101,7 +100,7 @@ const useStravaAthlete = () => {
           .then(async (response) => {
             console.log("Auth response: ", response);
             console.log("Strava login data: ", response.data);
-            dispatch(logInStravaUser(response.data));
+            setAthlete(response.data);
           })
           .catch((error) => {
             console.log("Error getting login data: ", error);
@@ -113,7 +112,7 @@ const useStravaAthlete = () => {
 
   //Post strava user to db
   useEffect(() => {
-    if (stravaIsLoggedIn && athlete && refreshToken) {
+    if (isLoggedIn && athlete && refreshToken) {
       const createUser = async () => {
         await axios({
           url: "https://test2.dcl.properties/user",
@@ -137,7 +136,7 @@ const useStravaAthlete = () => {
 
       createUser();
     }
-  }, [stravaIsLoggedIn, athlete, refreshToken]);
+  }, [isLoggedIn, athlete, refreshToken]);
 
   //Refresh accessToken when refresh token in state
   useEffect(() => {
@@ -158,7 +157,7 @@ const useStravaAthlete = () => {
         .then(async (response) => {
           console.log("Auth response from refresh flow: ", response);
           console.log("Strava login data from refresh flow: ", response.data);
-          dispatch(updateAccessToken(response.data.access_token));
+          setAccessToken(response.data.access_token);
         })
         .catch((error) => {
           console.log("Error getting login data using refresh token: ", error);
@@ -188,20 +187,27 @@ const useStravaAthlete = () => {
             "Strava login data from access token flow: ",
             response.data
           );
-          dispatch(updateAccessToken(response.data.access_token));
+          setAccessToken(response.data.access_token);
         })
         .catch((error) => {
           console.log("Error getting login data using access token: ", error);
         });
     };
 
-    if (accessToken && !stravaIsLoggedIn) {
+    if (accessToken && !isLoggedIn) {
       console.log("Trying to use access token for getting athlete");
       getAthleteData();
     }
   }, [accessToken]);
 
-  return { athlete, accessToken, stravaIsLoggedIn, handleStravaLogin };
+  return (
+    <StravaContext.Provider value={{ athlete, isLoggedIn, handleStravaLogin }}>
+      {children}
+    </StravaContext.Provider>
+  );
 };
 
-export default useStravaAthlete;
+export const useStrava = () => {
+  const { athlete, isLoggedIn, handleStravaLogin } = useContext(StravaContext);
+  return { athlete, isLoggedIn, handleStravaLogin };
+};

@@ -7,9 +7,8 @@ import { Text } from "..";
 import { DateTime } from "luxon";
 import { useAppDispatch } from "../../redux/store";
 
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
-import useCommitment from "../../hooks/useCommitment";
 import { parseSecondTimestampToFullString } from "../../utils/dateTime";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface DateFromTo {
   children?: React.ReactNode;
@@ -19,15 +18,13 @@ const DateFromTo = ({ children }: DateFromTo) => {
   const [startIn, setStartIn] = useState("0");
   const [endIn, setEndIn] = useState("7");
 
-  const { commitment } = useCommitment();
-
-  const dispatch = useAppDispatch();
+  const { commitment, setCommitment } = useCommitPool();
 
   useEffect(() => {
     const updateDates = () => {
       const startTime = calculateStartDay(startIn);
       const endTime = calculateEndDay(startTime, endIn);
-      dispatch(updateCommitment({ startTime, endTime }));
+      setCommitment({...commitment, startTime, endTime });
     };
 
     updateDates();
@@ -43,7 +40,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
         .set({ hour: 0, minute: 0 })
         .toSeconds();
     } else {
-      return commitment.startTime;
+      return commitment?.startTime;
     }
   };
 
@@ -58,7 +55,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
         .set({ hour: 23, minute: 59 })
         .toSeconds();
     } else {
-      return commitment.endTime;
+      return commitment?.endTime;
     }
   };
 
@@ -83,7 +80,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
       </View>
       <View>
         <Text
-          text={`Starts on: ${parseSecondTimestampToFullString(commitment.startTime)} `}
+          text={`Starts on: ${parseSecondTimestampToFullString(commitment?.startTime)} `}
           style={styles.dateView}
         />
         <Text

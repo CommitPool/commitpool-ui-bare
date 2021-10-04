@@ -1,6 +1,10 @@
 import "react-native-gesture-handler";
 import React from "react";
 
+import { InjectedProvider } from "./contexts/injectedProviderContext";
+import { ContractContextProvider } from "./contexts/contractContext";
+import { CommitPoolContextProvider } from "./contexts/commitPoolContext";
+import { StravaContextProvider } from "./contexts/stravaContext";
 import { Provider } from "react-redux";
 import store from "./redux/store";
 
@@ -43,35 +47,52 @@ const App = () => {
     return <AppLoading />;
   } else {
     return (
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <NavigationContainer>
-            <Stack.Navigator
-              initialRouteName="Test"
-              screenOptions={{
-                headerTitle: () => <Header />,
-                headerLeft: () => null,
-                headerShown: true,
-                headerTransparent: true,
-              }}
-            >
-              <Stack.Screen name="Login" component={LoginPage} />
-              <Stack.Screen name="Intro" component={IntroPage} />
-              <Stack.Screen name="ActivityGoal" component={ActivityGoalPage} />
-              <Stack.Screen
-                name="ActivitySource"
-                component={ActivitySourcePage}
-              />
-              <Stack.Screen name="Staking" component={StakingPage} />
-              <Stack.Screen name="Confirmation" component={ConfirmationPage} />
-              <Stack.Screen name="Track" component={TrackPage} />
-              <Stack.Screen name="Completion" component={CompletionPage} />
-              <Stack.Screen name="Faq" component={FaqPage} />
-              <Stack.Screen name="Test" component={TestPage} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </PersistGate>
-      </Provider>
+      <InjectedProvider>
+        <ContractContextProvider>
+          <CommitPoolContextProvider>
+            <StravaContextProvider>
+              <Provider store={store}>
+                <PersistGate loading={null} persistor={persistor}>
+                  <NavigationContainer>
+                    <Stack.Navigator
+                      initialRouteName="Test"
+                      screenOptions={{
+                        headerTitle: () => <Header />,
+                        headerLeft: () => null,
+                        headerShown: true,
+                        headerTransparent: true,
+                      }}
+                    >
+                      <Stack.Screen name="Login" component={LoginPage} />
+                      <Stack.Screen name="Intro" component={IntroPage} />
+                      <Stack.Screen
+                        name="ActivityGoal"
+                        component={ActivityGoalPage}
+                      />
+                      <Stack.Screen
+                        name="ActivitySource"
+                        component={ActivitySourcePage}
+                      />
+                      <Stack.Screen name="Staking" component={StakingPage} />
+                      <Stack.Screen
+                        name="Confirmation"
+                        component={ConfirmationPage}
+                      />
+                      <Stack.Screen name="Track" component={TrackPage} />
+                      <Stack.Screen
+                        name="Completion"
+                        component={CompletionPage}
+                      />
+                      <Stack.Screen name="Faq" component={FaqPage} />
+                      <Stack.Screen name="Test" component={TestPage} />
+                    </Stack.Navigator>
+                  </NavigationContainer>
+                </PersistGate>
+              </Provider>
+            </StravaContextProvider>
+          </CommitPoolContextProvider>
+        </ContractContextProvider>
+      </InjectedProvider>
     );
   }
 };

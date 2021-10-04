@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import useCommitment from "./useCommitment";
+import { useCommitPool } from "../contexts/commitPoolContext";
 import useStravaAthlete from "./useStravaAthlete";
 
 const useStravaData = () => {
     
     const [progress, setProgress] = useState<number>(0) 
-    const { commitment, activityName} = useCommitment();
-    const { accessToken } = useStravaAthlete();
+    const { commitment } = useCommitPool();
+    const { accessToken } = useStrava();
 
     useEffect(() => {
         const getActivity = async (

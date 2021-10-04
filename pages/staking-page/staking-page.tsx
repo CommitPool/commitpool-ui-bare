@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState} from "../../redux/store";
 
 import { StyleSheet, View } from "react-native";
 import {
@@ -17,6 +15,7 @@ import { RootStackParamList } from "..";
 
 import globalStyles from "../../resources/styles/styles";
 import strings from "../../resources/strings";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 type StakingPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -29,10 +28,7 @@ type StakingPageProps = {
 
 const StakingPage = ({ navigation }: StakingPageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-
-  const stakeSet: boolean = useSelector(
-    (state: RootState) => state.commitpool.stakeSet
-  );
+  const { commitment } = useCommitPool();
 
   return (
     <LayoutContainer>
@@ -60,7 +56,7 @@ const StakingPage = ({ navigation }: StakingPageProps) => {
         <Button
           text={strings.footer.next}
           onPress={() => {
-            stakeSet
+            commitment?.stakeSet
               ? navigation.navigate("ActivitySource")
               : setPopUpVisible(true)
           }}

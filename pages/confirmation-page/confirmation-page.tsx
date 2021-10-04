@@ -19,12 +19,11 @@ import {
   validCommitmentRequest,
   getCommitmentRequestParameters,
 } from "../../utils/commitment";
-import useCommitment from "../../hooks/useCommitment";
-import useActivities from "../../hooks/useActivities";
-import useContracts from "../../hooks/useContracts";
-import useWeb3 from "../../hooks/useWeb3";
-import useStravaAthlete from "../../hooks/useStravaAthlete";
 import { Transaction } from "ethers";
+import { useContracts } from "../../contexts/contractContext";
+import { useCurrentUser } from "../../contexts/currentUserContext";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { useStrava } from "../../contexts/stravaContext";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -38,16 +37,16 @@ type ConfirmationPageProps = {
 const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
-  const { commitment } = useCommitment();
-  const { activities } = useActivities();
-  const { athlete } = useStravaAthlete();
-  const { account, storeTransactionToState } = useWeb3();
+  const { commitment, activities } = useCommitPool();
+  const { athlete } = useStrava();
+  // const { storeTransactionToState } = useWeb3();
+  const { currentUser} = useCurrentUser();
   const { daiContract, spcContract } = useContracts();
 
   const createCommitment = async () => {
     if (validCommitmentRequest(commitment, activities) && spcContract && daiContract) {
       const allowance = await daiContract.allowance(
-        account,
+        currentUser?.username,
         spcContract.address
       );
 

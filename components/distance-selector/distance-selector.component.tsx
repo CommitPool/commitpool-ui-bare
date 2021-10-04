@@ -1,25 +1,23 @@
 import React from "react";
 import { useAppDispatch } from "../../redux/store";
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
 
 import { StyleSheet, View, TextInput } from "react-native";
 import { Text } from "..";
-import useCommitment from "../../hooks/useCommitment";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface DistanceSelector {
   text: string;
 }
 
 const DistanceSelector = ({ text }: DistanceSelector) => {
-  const { commitment } = useCommitment();
-  const { goalValue }: { goalValue: number} = commitment
+  const { commitment, setCommitment } = useCommitPool();
 
   const dispatch = useAppDispatch();
 
   const onDistanceInput = (value: string) => {
     const distance: number = Number.parseFloat(value);
     if (!isNaN(distance) && distance > 0) {
-      dispatch(updateCommitment({ goalValue: distance }));
+      setCommitment({ ...commitment, goalValue: distance });
     }
   };
 
@@ -28,7 +26,7 @@ const DistanceSelector = ({ text }: DistanceSelector) => {
       <Text text={text} />
       <View style={styles.unitInput}>
         <TextInput
-          defaultValue={goalValue.toString()}
+          defaultValue={commitment?.goalValue?.toString()}
           keyboardType={"number-pad"}
           style={styles.textInput}
           onChangeText={(value) => onDistanceInput(value)}

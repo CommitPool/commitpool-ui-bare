@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { Activity, DropdownItem } from "../types";
 
 const getActivityName = (
   activityKey: string,
