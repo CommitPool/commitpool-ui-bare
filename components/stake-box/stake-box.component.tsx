@@ -17,12 +17,13 @@ interface StakeBoxProps {
 const StakeBox = ({ style }: StakeBoxProps) => {
   const { commitment, setCommitment } = useCommitPool();
 
+  //TODO toast on invalid input
   const onStakeInput = (stake: string) => {
     const _stake = Number.parseFloat(stake);
     if (!isNaN(_stake) && validStake(_stake)) {
       setCommitment({ ...commitment, stake: _stake, stakeSet: true });
     } else {
-      setCommitment({ ...commitment, stakeSet: false });
+      setCommitment({ ...commitment, stake: undefined, stakeSet: false });
     }
   };
 

@@ -5,7 +5,6 @@ import { StyleSheet, View, TextInput } from "react-native";
 import { Text } from "..";
 
 import { DateTime } from "luxon";
-import { useAppDispatch } from "../../redux/store";
 
 import { parseSecondTimestampToFullString } from "../../utils/dateTime";
 import { useCommitPool } from "../../contexts/commitPoolContext";
@@ -84,7 +83,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
           style={styles.dateView}
         />
         <Text
-          text={`Ends on:  ${parseSecondTimestampToFullString(commitment.endTime)}`}
+          text={`Ends on:  ${parseSecondTimestampToFullString(commitment?.endTime)}`}
           style={styles.dateView}
         />
       </View>

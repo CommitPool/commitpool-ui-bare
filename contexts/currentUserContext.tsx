@@ -1,4 +1,4 @@
-import { Contract } from "ethers";
+import { BigNumber, Contract, ethers, providers } from "ethers";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Network, User } from "../types";
 import { useContracts } from "./contractContext";
@@ -26,6 +26,8 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
   const { injectedChain, address, injectedProvider } = useInjectedProvider();
   const { daiContract } = useContracts();
 
+  console.log("Current user:  ", currentUser);
+
   useEffect(() => {
     const user: Partial<User> = createWeb3User(address, injectedChain);
 
@@ -33,21 +35,29 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
   }, [injectedProvider, injectedChain, address]);
 
   useEffect(() => {
-    if (currentUser && daiContract) {
-      addUserBalances(currentUser, daiContract);
+    if (daiContract && injectedProvider) {
+      console.log("Adding balances to current user");
+      addUserBalances(injectedProvider, currentUser, daiContract);
     }
-  }, [currentUser]);
+  }, [daiContract, injectedProvider]);
 
   const addUserBalances = async (
+    provider: any,
     currentUser: Partial<User>,
     daiContract: Contract
   ) => {
-    const address: string | undefined =
-      currentUser.attributes?.["custom:account_address"];
-
-    if (injectedProvider && daiContract && address) {
-      const nativeTokenBalance = await injectedProvider.getBalance(address);
-      const daiBalance = await daiContract.balanceOf(address);
+    if (
+      injectedProvider &&
+      daiContract &&
+      currentUser.attributes?.["custom:account_address"]
+    ) {
+      const address: string = currentUser.attributes["custom:account_address"];
+      const nativeTokenBalance: string = await provider
+        .getBalance(address)
+        .then((res: BigNumber) => ethers.utils.formatEther(res).toString());
+      const daiBalance: string = await daiContract
+        .balanceOf(address)
+        .then((res: BigNumber) => ethers.utils.formatEther(res).toString());
       setCurrentUser({ ...currentUser, nativeTokenBalance, daiBalance });
     }
   };

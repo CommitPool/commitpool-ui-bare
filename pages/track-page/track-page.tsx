@@ -131,8 +131,8 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
           <Fragment>
             <Text text={strings.track.tracking.text} />
             {commitment?.startTime &&
-            commitment?.endTime &&
-            commitment?.activityName ? (
+            commitment?.endTime 
+             ? (
               <Fragment>
                 <View style={styles.commitmentValues}>
                   <Text

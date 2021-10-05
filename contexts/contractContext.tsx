@@ -7,15 +7,11 @@ import { Contract, ethers } from "ethers";
 type ContractContextType = {
   spcContract?: Contract;
   daiContract?: Contract;
-  setSpcContract: (contract: Contract) => void;
-  setDaiContract: (contract: Contract) => void;
 };
 
 export const ContractContext = createContext<ContractContextType>({
   spcContract: undefined,
   daiContract: undefined,
-  setSpcContract: (contract: Contract) => {},
-  setDaiContract: (contract: Contract) => {},
 });
 
 interface ContractProps {
@@ -38,20 +34,23 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
   const [spcContract, setSpcContract] = useState<Contract>();
   const [daiContract, setDaiContract] = useState<Contract>();
 
-  const { injectedChain, web3Modal, injectedProvider } = useInjectedProvider();
+  const { injectedChain, injectedProvider } = useInjectedProvider();
+
+  console.log("DAI contract: ", daiContract);
+  console.log("SPC contract: ", spcContract);
 
   useEffect(() => {
     console.log("Loading contract");
 
     const initContract = async () => {
       try {
-        const _daiContract: Contract = await new ethers.Contract(
+        const _daiContract: Contract = new ethers.Contract(
           daiAddrs[injectedChain.network],
           daiAbi,
           injectedProvider
         );
 
-        const _spcContract: Contract = await new ethers.Contract(
+        const _spcContract: Contract = new ethers.Contract(
           spcAddrs[injectedChain.network],
           spcAbi,
           injectedProvider
@@ -63,14 +62,27 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
       }
     };
 
-    if (injectedProvider&& injectedChain?.network) {
+    if (injectedProvider && injectedChain?.network) {
       initContract();
     }
   }, [injectedProvider, injectedChain]);
 
+  useEffect(() => {
+    if (injectedProvider && daiContract && spcContract) {
+      console.log(
+        "Updating contract with signer from: ",
+        injectedProvider
+      );
+      const _daiContract = daiContract.connect(injectedProvider.provider);
+      const _spcContract = spcContract.connect(injectedProvider.provider);
+      setDaiContract(_daiContract);
+      setSpcContract(_spcContract);
+    }
+  }, [injectedProvider]);
+
   return (
     <ContractContext.Provider
-      value={{ daiContract, spcContract, setSpcContract, setDaiContract }}
+      value={{ daiContract, spcContract}}
     >
       {children}
     </ContractContext.Provider>
@@ -78,7 +90,7 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
 };
 
 export const useContracts = () => {
-  const { spcContract, setSpcContract, daiContract, setDaiContract } =
+  const { spcContract, daiContract } =
     useContext(ContractContext);
-  return { spcContract, daiContract, setSpcContract, setDaiContract };
+  return { spcContract, daiContract };
 };

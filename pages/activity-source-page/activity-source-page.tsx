@@ -16,6 +16,7 @@ import globalStyles from "../../resources/styles/styles.js";
 import strings from "../../resources/strings";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
+import { useCurrentUser } from "../../contexts/currentUserContext";
 
 type ActivitySourcePageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -29,10 +30,9 @@ type ActivitySourcePageProps = {
 const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
 
-  const { athlete, isLoggedIn, handleStravaLogin} = useStrava();
-
-
+  const { athlete, handleStravaLogin} = useStrava();
   const { commitment } = useCommitPool();
+  const { currentUser } = useCurrentUser();
 
   return (
     <LayoutContainer>
@@ -44,7 +44,7 @@ const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
       />
       <Text style={globalStyles.headerOne} text={strings.activitySource.notLoggedIn.text} />
       <View style={styles.intro}>
-        {isLoggedIn ? (
+        {athlete?.id ? (
           <Fragment>
             <Text
               text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
@@ -75,11 +75,11 @@ const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
         <Button
           text={strings.footer.next}
           onPress={() => {
-            if(commitment.exists && stravaIsLoggedIn && isLoggedIn) {
+            if(commitment?.exists && athlete?.id && currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Track");
-            } else if (stravaIsLoggedIn && isLoggedIn) {
+            } else if (athlete?.id && currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Confirmation");
-            } else if (stravaIsLoggedIn && !isLoggedIn) {
+            } else if (athlete?.id && !currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Login");
             } else {
               setPopUpVisible(true);

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Activity, Commitment, DropdownItem } from "../types";
+import { Activity, Commitment, DropdownItem, User } from "../types";
 import { useCurrentUser } from "./currentUserContext";
 import { useContracts } from "./contractContext";
 import {
@@ -7,6 +7,7 @@ import {
   parseCommitmentFromContract,
   validActivityParameters,
 } from "../utils/commitment";
+import { Contract } from "ethers";
 
 type CommitPoolContextType = {
   activities?: Activity[];
@@ -16,9 +17,9 @@ type CommitPoolContextType = {
 };
 
 export const CommitPoolContext = createContext<CommitPoolContextType>({
-  activities: [],
-  commitment: {},
-  formattedActivities: [],
+  activities: undefined,
+  commitment: undefined,
+  formattedActivities: undefined,
   setCommitment: (commitment: Partial<Commitment>) => {},
 });
 
@@ -36,25 +37,33 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
   const { currentUser } = useCurrentUser();
   const { spcContract } = useContracts();
 
-  const refreshCommitment = async () => {
-    if (currentUser.attributes?.["custom:account_address"] && spcContract) {
-      const _address = currentUser.attributes["custom:account_address"];
-      console.log(`Checking for commitment for account ${_address}`);
-      const commitment = await spcContract.commitments(_address);
-      const _commitment: Partial<Commitment> =
-        parseCommitmentFromContract(commitment);
+  const refreshCommitment = async (user: Partial<User>, contract: Contract, activities: Activity[]) => {
+    if (user.attributes?.["custom:account_address"] && contract) {
+      console.log("Getting commitment")
+      const _address = user.attributes["custom:account_address"];
+      const commitment = await contract.commitments(_address);
+      const _commitment: Partial<Commitment> = parseCommitmentFromContract(
+        commitment,
+        activities
+      );
+      console.log("Setting commitment: ", _commitment)
       setCommitment(_commitment);
     }
   };
 
   //Check for commitment when user is logged in
   useEffect(() => {
-    refreshCommitment();
-  }, [currentUser, spcContract]);
+    if (!commitment && currentUser && spcContract && activities) {
+      console.log(
+        `Checking for commitment for account ${currentUser.attributes?.["custom:account_address"]}`
+      );
+      refreshCommitment(currentUser, spcContract, activities);
+    }
+  }, [commitment, currentUser, spcContract, activities]);
 
   useEffect(() => {
     if (spcContract) {
-      console.log("GETTING ACTIVITIES");
+      console.log("Getting activities");
       const buildActivityArray = async () => {
         const _activities: Activity[] = [];
         let loading: boolean = true;
@@ -81,7 +90,6 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
 
       buildActivityArray()
         .then((array) => {
-          console.log("ActivityArray: ", array);
           setActivities(array);
         })
         .catch((e) => console.log("Error getting activities: ", e));
@@ -90,8 +98,8 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
 
   //Format activities for dropdown after retrieving from contract
   useEffect(() => {
-    console.log("FORMATTING ACTIVITIES");
     if (activities && activities?.length > 0) {
+      console.log("Formatting activities");
       const _formattedActivities: DropdownItem[] = formatActivities(activities);
       setFormattedActivities(_formattedActivities);
     }
@@ -104,11 +112,13 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
         validActivityParameters(commitment, activities) &&
         !commitment.activitySet
       ) {
+        console.log("Setting activitySet to true");
         setCommitment({ ...commitment, activitySet: true });
       } else if (
         !validActivityParameters(commitment, activities) &&
         commitment.activitySet
       ) {
+        console.log("Setting activitySet to true");
         setCommitment({ ...commitment, activitySet: false });
       }
     }

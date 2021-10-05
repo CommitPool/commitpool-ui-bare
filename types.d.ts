@@ -15,10 +15,13 @@ export interface Commitment {
 }
 
 export interface Athlete {
+  id: number;
   username?: string;
   firstname?: string;
-  id: number;
   profile_medium?: string;
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
 }
 
 export interface Activity {

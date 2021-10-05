@@ -32,7 +32,9 @@ const formatActivities = (activities: Activity[]): DropdownItem[] => {
   return formattedActivities;
 };
 
-const parseCommitmentFromContract = (commitment: any): Partial<Commitment> => {
+const parseCommitmentFromContract = (commitment: any, activities: Activity[]): Partial<Commitment> => {
+  const activityName: string = getActivityName(commitment.activityKey, activities);
+
   const _commitment: Partial<Commitment> = {
     activityKey: commitment.activityKey,
     goalValue: Number.parseFloat(commitment.goalValue) / 100,
@@ -43,7 +45,9 @@ const parseCommitmentFromContract = (commitment: any): Partial<Commitment> => {
     exists: commitment.exists,
     met: commitment.met,
     unit: "mi",
+    activityName
   };
+  
   console.log("Parsed commitment: ", _commitment);
   return _commitment;
 };
