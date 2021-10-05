@@ -32,6 +32,7 @@ import {
   CompletionPage,
   FaqPage,
 } from "./pages";
+import { CurrentUserContextProvider } from "./contexts/currentUserContext";
 
 let persistor = persistStore(store);
 
@@ -49,48 +50,50 @@ const App = () => {
     return (
       <InjectedProvider>
         <ContractContextProvider>
-          <CommitPoolContextProvider>
+          <CurrentUserContextProvider>
             <StravaContextProvider>
-              <Provider store={store}>
-                <PersistGate loading={null} persistor={persistor}>
-                  <NavigationContainer>
-                    <Stack.Navigator
-                      initialRouteName="Test"
-                      screenOptions={{
-                        headerTitle: () => <Header />,
-                        headerLeft: () => null,
-                        headerShown: true,
-                        headerTransparent: true,
-                      }}
-                    >
-                      <Stack.Screen name="Login" component={LoginPage} />
-                      <Stack.Screen name="Intro" component={IntroPage} />
-                      <Stack.Screen
-                        name="ActivityGoal"
-                        component={ActivityGoalPage}
-                      />
-                      <Stack.Screen
-                        name="ActivitySource"
-                        component={ActivitySourcePage}
-                      />
-                      <Stack.Screen name="Staking" component={StakingPage} />
-                      <Stack.Screen
-                        name="Confirmation"
-                        component={ConfirmationPage}
-                      />
-                      <Stack.Screen name="Track" component={TrackPage} />
-                      <Stack.Screen
-                        name="Completion"
-                        component={CompletionPage}
-                      />
-                      <Stack.Screen name="Faq" component={FaqPage} />
-                      <Stack.Screen name="Test" component={TestPage} />
-                    </Stack.Navigator>
-                  </NavigationContainer>
-                </PersistGate>
-              </Provider>
+              <CommitPoolContextProvider>
+                <Provider store={store}>
+                  <PersistGate loading={null} persistor={persistor}>
+                    <NavigationContainer>
+                      <Stack.Navigator
+                        initialRouteName="Test"
+                        screenOptions={{
+                          headerTitle: () => <Header />,
+                          headerLeft: () => null,
+                          headerShown: true,
+                          headerTransparent: true,
+                        }}
+                      >
+                        <Stack.Screen name="Login" component={LoginPage} />
+                        <Stack.Screen name="Intro" component={IntroPage} />
+                        <Stack.Screen
+                          name="ActivityGoal"
+                          component={ActivityGoalPage}
+                        />
+                        <Stack.Screen
+                          name="ActivitySource"
+                          component={ActivitySourcePage}
+                        />
+                        <Stack.Screen name="Staking" component={StakingPage} />
+                        <Stack.Screen
+                          name="Confirmation"
+                          component={ConfirmationPage}
+                        />
+                        <Stack.Screen name="Track" component={TrackPage} />
+                        <Stack.Screen
+                          name="Completion"
+                          component={CompletionPage}
+                        />
+                        <Stack.Screen name="Faq" component={FaqPage} />
+                        <Stack.Screen name="Test" component={TestPage} />
+                      </Stack.Navigator>
+                    </NavigationContainer>
+                  </PersistGate>
+                </Provider>
+              </CommitPoolContextProvider>
             </StravaContextProvider>
-          </CommitPoolContextProvider>
+          </CurrentUserContextProvider>
         </ContractContextProvider>
       </InjectedProvider>
     );

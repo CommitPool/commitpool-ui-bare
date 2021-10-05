@@ -10,7 +10,8 @@ export interface Commitment {
   unit: string;
   activitySet?: boolean;
   activityName?: string;
-  stakeSet?:boolean;
+  stakeSet?: boolean;
+  progress?: number;
 }
 
 export interface Athlete {
@@ -60,9 +61,13 @@ export type TransactionDetails = {
   txReceipt: Transaction;
 };
 
+
 export type User = {
   type: string;
-  attributes: { 'custom:account_address': string };
+  attributes: {
+    "custom:account_address": string;
+    [key: string]: string;
+  };
   network: Network;
   username: string;
   nativeTokenBalance: string;

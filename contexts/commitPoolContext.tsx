@@ -16,9 +16,9 @@ type CommitPoolContextType = {
 };
 
 export const CommitPoolContext = createContext<CommitPoolContextType>({
-  activities: undefined,
-  commitment: undefined,
-  formattedActivities: undefined,
+  activities: [],
+  commitment: {},
+  formattedActivities: [],
   setCommitment: (commitment: Partial<Commitment>) => {},
 });
 
@@ -30,28 +30,29 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
   children,
 }: CommitPoolProps) => {
   const [activities, setActivities] = useState<Activity[]>();
-  const [commitment, setCommitment] = useState<Commitment>();
+  const [commitment, setCommitment] = useState<Partial<Commitment>>();
   const [formattedActivities, setFormattedActivities] =
     useState<DropdownItem[]>();
   const { currentUser } = useCurrentUser();
   const { spcContract } = useContracts();
 
   const refreshCommitment = async () => {
-    if (currentUser?.username && spcContract) {
-      console.log(
-        `Checking for commitment for account ${currentUser.username}`
-      );
-      const commitment = await spcContract.commitments(currentUser.username);
-      const _commitment: Commitment = parseCommitmentFromContract(commitment);
+    if (currentUser.attributes?.["custom:account_address"] && spcContract) {
+      const _address = currentUser.attributes["custom:account_address"];
+      console.log(`Checking for commitment for account ${_address}`);
+      const commitment = await spcContract.commitments(_address);
+      const _commitment: Partial<Commitment> =
+        parseCommitmentFromContract(commitment);
       setCommitment(_commitment);
     }
   };
 
+  //Check for commitment when user is logged in
   useEffect(() => {
-    console.log("Loading commitpool data");
-    console.log("currentUser", currentUser);
-    console.log("spcContract", spcContract);
+    refreshCommitment();
+  }, [currentUser, spcContract]);
 
+  useEffect(() => {
     if (spcContract) {
       console.log("GETTING ACTIVITIES");
       const buildActivityArray = async () => {

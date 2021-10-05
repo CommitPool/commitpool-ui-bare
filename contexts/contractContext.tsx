@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useInjectedProvider } from "./injectedProviderContext";
-import { Contract } from "web3-eth-contract";
 import daiAbi from "../resources/contracts/DaiToken.json";
 import spcAbi from "../resources/contracts/SinglePlayerCommit.json";
+import { Contract, ethers } from "ethers";
 
 type ContractContextType = {
   spcContract?: Contract;
@@ -42,20 +42,19 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
 
   useEffect(() => {
     console.log("Loading contract");
-    console.log("web3Modal", web3Modal);
-    console.log("injectedChain", injectedChain);
 
     const initContract = async () => {
-      console.log("network name", injectedChain.network);
       try {
-        const _daiContract: Contract = await new injectedProvider.eth.Contract(
+        const _daiContract: Contract = await new ethers.Contract(
+          daiAddrs[injectedChain.network],
           daiAbi,
-          daiAddrs[injectedChain.network]
+          injectedProvider
         );
 
-        const _spcContract: Contract = await new injectedProvider.eth.Contract(
+        const _spcContract: Contract = await new ethers.Contract(
+          spcAddrs[injectedChain.network],
           spcAbi,
-          spcAddrs[injectedChain.network]
+          injectedProvider
         );
         setDaiContract(_daiContract);
         setSpcContract(_spcContract);
@@ -64,10 +63,10 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
       }
     };
 
-    if (injectedProvider?.eth && injectedChain?.network) {
+    if (injectedProvider&& injectedChain?.network) {
       initContract();
     }
-  }, [injectedChain, web3Modal.web3]);
+  }, [injectedProvider, injectedChain]);
 
   return (
     <ContractContext.Provider

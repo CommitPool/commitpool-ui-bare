@@ -32,7 +32,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
   const { injectedProvider, requestWallet } = useInjectedProvider();
   const [popUpVisible, setPopUpVisible] = useState(false);
 
-  const { isLoggedIn } = useStrava();
+  const { athlete } = useStrava();
   const { spcContract } = useContracts();
   const { currentUser } = useCurrentUser();
   const { commitment } = useCommitPool();
@@ -55,10 +55,10 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
   }, [currentUser, spcContract]);
 
   const onNext = () => {
-    if (currentUser && commitment?.activitySet && commitment?.stakeSet && isLoggedIn) {
+    if (currentUser && commitment?.activitySet && commitment?.stakeSet && athlete?.id) {
       //All parameters set, go to commitment confirmation screen
       navigation.navigate("Confirmation");
-    } else if (currentUser && commitment?.activitySet && commitment?.stakeSet && !isLoggedIn) {
+    } else if (currentUser && commitment?.activitySet && commitment?.stakeSet && !athlete?.id) {
       //All parameters set, but need strava account data
       navigation.navigate("ActivitySource");
     } else if (currentUser) {

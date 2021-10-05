@@ -3,7 +3,6 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
 import { LayoutContainer, Text, Button } from "../../components";
-import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import strings from "../../resources/strings";

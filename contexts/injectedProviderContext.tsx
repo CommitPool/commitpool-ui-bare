@@ -80,8 +80,8 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
     console.log("connecting provider");
     const web3: any = new ethers.providers.Web3Provider(provider);
     console.log("Web3 instance: ", web3);
-    if (web3?.currentProvider?.selectedAddress) {
-      const address = web3?.currentProvider?.selectedAddress;
+    if (web3?.provider?.selectedAddress) {
+      const address = web3.provider.selectedAddress;
       setInjectedProvider(web3);
       // setPageState('injectedProvider', web3);
       setAddress(address);

@@ -18,7 +18,6 @@ import { BigNumber, Contract, Transaction } from "ethers";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useContracts } from "../../contexts/contractContext";
 import { useStrava } from "../../contexts/stravaContext";
-import useStravaData from "../../hooks/useStravaData";
 import { Commitment, TransactionTypes } from "../../types";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 
@@ -37,19 +36,19 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
   const { activities, commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  const { storeTransactionToState, getTransaction } = useWeb3();
-  const { athlete, isLoggedIn } = useStrava();
+  // const { storeTransactionToState, getTransaction } = useWeb3();
+  const { athlete } = useStrava();
   const { currentUser } = useCurrentUser();
-  const { progress } = useStravaData();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
-  const tx: Transaction | undefined = getTransaction(methodCall);
+  // const tx: Transaction | undefined = getTransaction(methodCall);
+  const tx: boolean = false;
 
   //TODO manage URL smart when 'undefined'
   const stravaUrl: string = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
     : ``;
-  const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
+  // const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
 
   const oracleAddress: string | undefined = activities?.find(
     (activity) => activity.key === commitment?.activityKey
@@ -67,25 +66,26 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         )
         .then((txReceipt: Transaction) => {
           console.log("requestActivityDistanceTX receipt: ", txReceipt);
-          storeTransactionToState({
-            methodCall,
-            txReceipt,
-          });
+          // storeTransactionToState({
+          //   methodCall,
+          //   txReceipt,
+          // });
         });
     }
   };
 
   const listenForActivityDistanceUpdate = (
-    _singlePlayerCommit: Contract | undefined,
-    commitment: Commitment
+    _singlePlayerCommit: Contract,
+    commitment: Partial<Commitment> 
   ) => {
-    if (_singlePlayerCommit && commitment) {
+    const now = new Date().getTime() / 1000;
+
+    if (commitment?.endTime) {
       _singlePlayerCommit.on(
         "RequestActivityDistanceFulfilled",
         async (id: string, distance: BigNumber, committer: string) => {
-          const now = new Date().getTime() / 1000;
 
-          if (committer.toLowerCase() === currentUser?.username?.toLowerCase()) {
+          if (committer.toLowerCase() === currentUser.attributes?.["custom:account_address"].toLowerCase()) {
             if (now > commitment.endTime) {
               navigation.navigate("Completion");
             } else {
@@ -97,7 +97,9 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     }
   };
 
-  listenForActivityDistanceUpdate(spcContract, commitment);
+  if(spcContract && commitment){
+    listenForActivityDistanceUpdate(spcContract, commitment);
+  }
 
   const onContinue = async () => {
     if (!tx) {
@@ -119,7 +121,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
             <ActivityIndicator size="large" color="#ffffff" />
             <a
               style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-              href={txUrl}
+              // href={txUrl}
               target="_blank"
             >
               View transaction on Polygonscan
@@ -152,7 +154,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
                 </View>
                 <View style={styles.commitmentValues}>
                   <Text text={`Progression`} />
-                  <ProgressCircle progress={progress} />
+                  <ProgressCircle progress={commitment?.progress || 0} />
                 </View>
               </Fragment>
             ) : undefined}
@@ -161,7 +163,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
       </View>
 
       <View>
-        {isLoggedIn && athlete?.id ? (
+        {athlete?.id ? (
           <a
             style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
             href={stravaUrl}
