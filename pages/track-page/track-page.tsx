@@ -49,9 +49,9 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     : ``;
   // const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
 
-  const oracleAddress: string | undefined = activities?.find(
-    (activity) => activity.key === commitment?.activityKey
-  )?.oracle;
+  //to do - move to env and/or activity state
+  const oracleAddress: string = '0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E';
+  const jobId: string = '692ce2ecba234a3f9a0c579f8bf7a4cb';
 
   const processCommitmentProgress = async () => {
     if (spcContract && currentUser?.attributes?.["custom:account_address"] && oracleAddress) {
@@ -59,8 +59,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         .requestActivityDistance(
           currentUser.attributes["custom:account_address"],
           oracleAddress,
-          //to do - move to env and/or activity state
-          "9ce5c4e09dda4c3687bac7a2f676268f",
+          jobId,
           { gasLimit: 500000 }
         )
         .then((txReceipt: Transaction) => {

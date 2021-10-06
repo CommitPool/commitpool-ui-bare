@@ -15,8 +15,8 @@ import { useCommitPool } from "./commitPoolContext";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
 //Strava Credentials
-const clientID: string = "66714&";
-const clientSecret: string = "6b5e8c4fd9bb841d1e8d9be15020dab2017607e4";
+const clientID: string = "51548&";
+const clientSecret: string = "28d56211b9ca33972055bf61010074fbedc3c7c2";
 
 // Strava Endpoints
 const discovery: DiscoveryDocument = {
