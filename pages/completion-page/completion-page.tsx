@@ -26,15 +26,12 @@ type CompletionPageProps = {
 const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const { commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  const { currentUser } = useCurrentUser();
-  const { getTransaction, storeTransactionToState } = useInjectedProvider();
+  const { currentUser, latestTransaction, setLatestTransaction } = useCurrentUser();
   const [loading, setLoading] = useState<boolean>(true);
   const [success, setSuccess] = useState<boolean>(false);
-  const [txSent, setTxSent] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
-  const tx: Transaction | undefined = getTransaction(methodCall);
-  const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
+  const txUrl: string = latestTransaction.txReceipt?.hash ? `https://polygonscan.com/tx/${latestTransaction.txReceipt?.hash}` : "No Transaction found";
 
   //Check is commitment was met
   useEffect(() => {
@@ -47,7 +44,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     }
   }, [commitment, loading]);
 
-  const achievement: string = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment.goalValue} miles`;
+  const achievement: string = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
 
   const onProcess = async () => {
     if (currentUser?.username && spcContract) {
@@ -56,11 +53,10 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
         .processCommitmentUser()
         .then((txReceipt: Transaction) => {
           console.log("processCommitmentUserTX receipt: ", txReceipt);
-          storeTransactionToState({
+          setLatestTransaction({
             methodCall,
             txReceipt,
           });
-          setTxSent(true);
         });
     } else {
       console.log("Web3 not logged in, routing to login");
@@ -104,7 +100,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
           <Text text={achievement} />
         </View>
       )}
-      {txSent ? (
+      {latestTransaction.methodCall === methodCall ? (
         <Fragment>
           <Text text="Awaiting transaction processing" />
           <ActivityIndicator size="large" color="#ffffff" />

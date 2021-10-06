@@ -1,5 +1,4 @@
 import React from "react";
-import ProgressBar from "react-native-progress/Bar";
 import { View, Text, StyleSheet } from "react-native";
 
 interface CustomProgressBar {

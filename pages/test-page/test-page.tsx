@@ -5,8 +5,6 @@ import { RootStackParamList } from "..";
 import { LayoutContainer, Text, Button } from "../../components";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 
-import { useAppDispatch } from "../../redux/store";
-import { reset as resetTransactions } from "../../redux/transactions/transactionSlice";
 import strings from "../../resources/strings";
 
 type TestPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
@@ -16,12 +14,10 @@ type TestPageProps = {
 };
 
 const TestPage = ({ navigation }: TestPageProps) => {
-  const dispatch = useAppDispatch();
   const { setCommitment } = useCommitPool();
 
   const clearStateAndRoute = () => {
     setCommitment({});
-    dispatch(resetTransactions({}));
     navigation.navigate("ActivityGoal");
     window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
   };

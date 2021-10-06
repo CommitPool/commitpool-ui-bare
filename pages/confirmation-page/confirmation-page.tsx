@@ -39,14 +39,21 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment, activities } = useCommitPool();
   const { athlete } = useStrava();
-  // const { storeTransactionToState } = useWeb3();
-  const { currentUser} = useCurrentUser();
+  const { currentUser, latestTransaction, setLatestTransaction } =
+    useCurrentUser();
   const { daiContract, spcContract } = useContracts();
 
   const createCommitment = async () => {
-    if (validCommitmentRequest(commitment, activities) && spcContract && daiContract) {
+    if (
+      commitment &&
+      activities &&
+      validCommitmentRequest(commitment, activities) &&
+      spcContract &&
+      daiContract &&
+      athlete
+    ) {
       const allowance = await daiContract.allowance(
-        currentUser?.username,
+        currentUser?.attributes?.["custom:account_address"],
         spcContract.address
       );
 
@@ -62,7 +69,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
       );
 
       if (allowance.gte(_commitmentParameters._stake)) {
-        console.log("Submitting D&C tx")
+        console.log("Submitting D&C tx");
         await spcContract
           .depositAndCommit(
             _commitmentParametersWithUserId._activityKey,
@@ -75,27 +82,24 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             { gasLimit: 5000000 }
           )
           .then((receipt: Transaction) =>
-            storeTransactionToState({
+            setLatestTransaction({
               methodCall: "depositAndCommit",
               txReceipt: receipt,
             })
           );
       } else {
-        console.log("Getting allowance with DAI contract: ", daiContract)
+        console.log("Getting allowance with DAI contract: ", daiContract);
 
         await daiContract
-          .approve(
-            spcContract.address,
-            _commitmentParametersWithUserId._stake
-          )
+          .approve(spcContract.address, _commitmentParametersWithUserId._stake)
           .then((receipt: Transaction) =>
-            storeTransactionToState({
+            setLatestTransaction({
               methodCall: "approve",
               txReceipt: receipt,
             })
           );
 
-        console.log("Calling D&C with SPC contract: ", spcContract)
+        console.log("Calling D&C with SPC contract: ", spcContract);
         await spcContract
           .depositAndCommit(
             _commitmentParametersWithUserId._activityKey,
@@ -108,7 +112,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             { gasLimit: 5000000 }
           )
           .then((receipt: Transaction) =>
-            storeTransactionToState({
+            setLatestTransaction({
               methodCall: "depositAndCommit",
               txReceipt: receipt,
             })

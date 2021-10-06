@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 
 import DropDownPicker from "react-native-dropdown-picker";
+import { DropdownItem } from "../../types";
 
 interface Picker {
   itemsToSelect: DropdownItem[];

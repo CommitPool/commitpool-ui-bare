@@ -35,26 +35,31 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
   const { activities, commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  // const { storeTransactionToState, getTransaction } = useWeb3();
   const { athlete } = useStrava();
-  const { currentUser } = useCurrentUser();
+  const { currentUser, latestTransaction, setLatestTransaction } =
+    useCurrentUser();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
-  // const tx: Transaction | undefined = getTransaction(methodCall);
   const tx: boolean = false;
 
   //TODO manage URL smart when 'undefined'
   const stravaUrl: string = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
     : ``;
-  // const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
+  const txUrl: string = latestTransaction?.txReceipt?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+    : "No transaction found";
 
   const oracleAddress: string | undefined = activities?.find(
     (activity) => activity.key === commitment?.activityKey
   )?.oracle;
 
   const processCommitmentProgress = async () => {
-    if (spcContract && currentUser?.attributes?.["custom:account_address"] && oracleAddress) {
+    if (
+      spcContract &&
+      currentUser?.attributes?.["custom:account_address"] &&
+      oracleAddress
+    ) {
       await spcContract
         .requestActivityDistance(
           currentUser.attributes["custom:account_address"],
@@ -65,17 +70,17 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         )
         .then((txReceipt: Transaction) => {
           console.log("requestActivityDistanceTX receipt: ", txReceipt);
-          // storeTransactionToState({
-          //   methodCall,
-          //   txReceipt,
-          // });
+          setLatestTransaction({
+            methodCall,
+            txReceipt,
+          });
         });
     }
   };
 
   const listenForActivityDistanceUpdate = (
     _singlePlayerCommit: Contract,
-    commitment: Partial<Commitment> 
+    commitment: Partial<Commitment>
   ) => {
     const now = new Date().getTime() / 1000;
 
@@ -83,9 +88,11 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
       _singlePlayerCommit.on(
         "RequestActivityDistanceFulfilled",
         async (id: string, distance: BigNumber, committer: string) => {
-
-          if (committer.toLowerCase() === currentUser.attributes?.["custom:account_address"].toLowerCase()) {
-            if (now > commitment.endTime) {
+          if (
+            committer.toLowerCase() ===
+            currentUser.attributes?.["custom:account_address"].toLowerCase()
+          ) {
+            if (commitment?.endTime && now > commitment.endTime) {
               navigation.navigate("Completion");
             } else {
               setPopUpVisible(true);
@@ -96,7 +103,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     }
   };
 
-  if(spcContract && commitment){
+  if (spcContract && commitment) {
     listenForActivityDistanceUpdate(spcContract, commitment);
   }
 
@@ -129,9 +136,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         ) : (
           <Fragment>
             <Text text={strings.track.tracking.text} />
-            {commitment?.startTime &&
-            commitment?.endTime 
-             ? (
+            {commitment?.startTime && commitment?.endTime ? (
               <Fragment>
                 <View style={styles.commitmentValues}>
                   <Text

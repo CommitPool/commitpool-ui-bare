@@ -5,11 +5,6 @@ import { InjectedProvider } from "./contexts/injectedProviderContext";
 import { ContractContextProvider } from "./contexts/contractContext";
 import { CommitPoolContextProvider } from "./contexts/commitPoolContext";
 import { StravaContextProvider } from "./contexts/stravaContext";
-import { Provider } from "react-redux";
-import store from "./redux/store";
-
-import { persistStore } from "redux-persist";
-import { PersistGate } from "redux-persist/integration/react";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -34,8 +29,6 @@ import {
 } from "./pages";
 import { CurrentUserContextProvider } from "./contexts/currentUserContext";
 
-let persistor = persistStore(store);
-
 const App = () => {
   let [fontsLoaded] = useFonts({
     OpenSans_400Regular,
@@ -53,8 +46,6 @@ const App = () => {
           <CurrentUserContextProvider>
             <StravaContextProvider>
               <CommitPoolContextProvider>
-                <Provider store={store}>
-                  <PersistGate loading={null} persistor={persistor}>
                     <NavigationContainer>
                       <Stack.Navigator
                         initialRouteName="Test"
@@ -89,8 +80,6 @@ const App = () => {
                         <Stack.Screen name="Test" component={TestPage} />
                       </Stack.Navigator>
                     </NavigationContainer>
-                  </PersistGate>
-                </Provider>
               </CommitPoolContextProvider>
             </StravaContextProvider>
           </CurrentUserContextProvider>

@@ -1,5 +1,4 @@
 import React from "react";
-import { useAppDispatch } from "../../redux/store";
 
 import { StyleSheet, View, TextInput } from "react-native";
 import { Text } from "..";
@@ -11,8 +10,6 @@ interface DistanceSelector {
 
 const DistanceSelector = ({ text }: DistanceSelector) => {
   const { commitment, setCommitment } = useCommitPool();
-
-  const dispatch = useAppDispatch();
 
   const onDistanceInput = (value: string) => {
     const distance: number = Number.parseFloat(value);

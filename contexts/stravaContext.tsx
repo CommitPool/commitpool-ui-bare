@@ -97,13 +97,11 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
   useEffect(() => {
     if (refreshToken !== "") {
       refreshAccessToken(refreshToken);
-    } 
+    }
 
     if (refreshToken !== "" && accessToken !== "") {
       setAthleteUsingAccessToken(accessToken);
-    } 
-    
-    else if (
+    } else if (
       refreshToken === "" &&
       accessToken === "" &&
       response?.type === "success" &&
@@ -173,9 +171,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       });
   };
 
-  const setAthleteUsingAccessToken = async (
-    _accessToken: string
-  ) => {
+  const setAthleteUsingAccessToken = async (_accessToken: string) => {
     console.log("Getting athlete data using access token: ", _accessToken);
 
     await axios({
@@ -183,7 +179,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       method: "get",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${_accessToken}`,
+        Authorization: `Bearer ${_accessToken}`,
       },
     })
       .then(async (response) => {
