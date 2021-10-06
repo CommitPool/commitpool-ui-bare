@@ -52,25 +52,18 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
     if (window.localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER")) {
       console.log("Loading provider from cache");
       connectProvider();
+    } else {
+      console.log("Connecting default provider");
+      const connectDefaultProvider = () => {
+        const chain = chainByNetworkId("137");
+
+        const defaultProvider = ethers.getDefaultProvider(chain.rpc_url);
+        setInjectedChain(chain);
+        setInjectedProvider(defaultProvider);
+      };
+
+      connectDefaultProvider();
     }
-
-    // else {
-    //   console.log("Connecting default provider");
-    //   const connectDefaultProvider = () => {
-    //     // const [web3ModalProvider, web3] = await web3ModalToWeb3(defaultModal);
-    //     const defaultProvider = ethers.getDefaultProvider("polygon", { infura: "fb9dd1f3476f44ad92158c24ba5120c6"});
-    //     const chainId = defaultProvider?._network?.chainId || 137;
-    //     const chain = chainByNetworkId("137")
-
-    //     console.log(defaultProvider)
-    //     console.log(chain)
-
-    //     setInjectedChain(chain);
-    //     setInjectedProvider(defaultProvider);
-    //   };
-
-    //   connectDefaultProvider();
-    // }
   }, []);
 
   const hasListeners: any = useRef(null);
