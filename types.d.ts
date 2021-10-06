@@ -19,9 +19,6 @@ export interface Athlete {
   username?: string;
   firstname?: string;
   profile_medium?: string;
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
 }
 
 export interface Activity {

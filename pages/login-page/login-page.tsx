@@ -76,7 +76,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
         text={strings.login.alert}
       />
       <View style={styles.loginPage}>
-        {currentUser?.username ? (
+        {currentUser?.attributes?.["custom:account_address"] ? (
           <View>
             <Text text={`You're logged in to ${currentUser.username}`} />
             <Text text={`MATIC balance:  ${currentUser.nativeTokenBalance}`} />

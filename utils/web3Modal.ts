@@ -10,7 +10,7 @@ import { chainByID, chainByNetworkId } from "./chain";
 
 const isInjected = () => {
   const id = window.ethereum?.chainId;
-  console.log("ID: ", id);
+  console.log("chain ID: ", id);
   return id;
 };
 
@@ -18,7 +18,6 @@ export const attemptInjectedChainData = (): Network =>
   isInjected() ? chainByID(window.ethereum.chainId) : chainByID("137");
 
 const addNetworkProviders = (chainData: Network) => {
-  console.log('ChainData: ', chainData);
   const allProviders: any = {};
   if (!chainData) {
     // this will fire if window.ethereum exists, but the user is on the wrong chain
@@ -41,7 +40,6 @@ const addNetworkProviders = (chainData: Network) => {
 
   if (providersToAdd.includes("torus")) {
     allProviders.torus = {
-      // network: chainData.network,
       package: Torus,
       options: {
         networkParams: {

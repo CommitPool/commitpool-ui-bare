@@ -73,8 +73,6 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
     };
 
     if (injectedProvider && injectedChain?.network) {
-      console.log("Loading contracts");
-
       initContract();
     }
   }, [injectedProvider, injectedChain]);

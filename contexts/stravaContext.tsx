@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 import { useCurrentUser } from "./currentUserContext";
 import { useCommitPool } from "./commitPoolContext";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 //Strava Credentials
 const clientID: string = "66714&";
@@ -46,11 +47,23 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
   const [athlete, setAthlete] = useState<Athlete>();
   const { currentUser, setCurrentUser } = useCurrentUser();
   const { commitment, setCommitment } = useCommitPool();
+  const [refreshToken, setRefreshToken] = useLocalStorage<string>(
+    "strava_rt",
+    ""
+  );
+  const [accessToken, setAccessToken] = useLocalStorage<string>(
+    "strava_at",
+    ""
+  );
 
-  console.log("Athlete in context: ", athlete)
+  console.log("Athlete in context: ", athlete);
 
   const handleStravaLogin = async () => {
     athlete?.id ? await logOutAndClearState() : await stravaOauth();
+  };
+
+  const stravaOauth = async () => {
+    await promptAsync();
   };
 
   //Strava login
@@ -69,69 +82,44 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
   );
 
   const logOutAndClearState = async () => {
-    if (athlete?.refresh_token) {
-      const config: RevokeTokenRequestConfig = { token: athlete.refresh_token };
+    if (refreshToken !== "") {
+      const config: RevokeTokenRequestConfig = { token: refreshToken };
 
       await revokeAsync(config, discovery);
     }
 
+    setRefreshToken("");
+    setAccessToken("");
     setAthlete(undefined);
   };
 
-  const stravaOauth = async () => {
-    await promptAsync();
-  };
-
-  //Get strava auth code from oauth response, get and set athlete data
+  //Go over log in/update options
   useEffect(() => {
-    if (response?.type === "success" && response.params?.code) {
-      const authCode: string = response.params.code;
-      executeLoginAndSetAthlete(authCode);
-    }
-  }, [response]);
+    if (refreshToken !== "") {
+      refreshAccessToken(refreshToken);
+    } 
 
-  //Post strava user to db
+    if (refreshToken !== "" && accessToken !== "") {
+      setAthleteUsingAccessToken(accessToken);
+    } 
+    
+    else if (
+      refreshToken === "" &&
+      accessToken === "" &&
+      response?.type === "success" &&
+      response.params?.code
+    ) {
+      const authCode: string = response.params.code;
+      executeLoginAndSetAthleteUsingAuthCode(authCode);
+    }
+  }, [response, refreshToken, accessToken]);
+
+  //finally post strava user to db
   useEffect(() => {
     if (athlete) {
       console.log("Posting athlete to DB");
       storeAthleteInDb(athlete);
     }
-
-    // if (athlete?.refresh_token) {
-    //   const getAccessToken = async () => {
-    //     await axios({
-    //       baseURL: discovery.tokenEndpoint,
-    //       method: "post",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       data: {
-    //         client_id: clientID,
-    //         client_secret: clientSecret,
-    //         refresh_token: athlete?.refresh_token,
-    //         grant_type: "refresh_token",
-    //       },
-    //     })
-    //       .then(async (response) => {
-    //         console.log("Auth response from refresh flow: ", response);
-    //         console.log("Strava login data from refresh flow: ", response.data);
-    //         if (response.data?.access_token) {
-    //           setAthlete({
-    //             ...athlete,
-    //             access_token: response.data.access_token,
-    //           });
-    //         }
-    //       })
-    //       .catch((error) => {
-    //         console.log(
-    //           "Error getting login data using refresh token: ",
-    //           error
-    //         );
-    //       });
-    //   };
-
-    //   getAccessToken();
-    // }
   }, [athlete]);
 
   const storeAthleteInDb = async (athlete: Athlete) => {
@@ -144,7 +132,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       },
       data: {
         address: athlete.id,
-        token: athlete.refresh_token,
+        token: accessToken,
       },
     })
       .then((response) => {
@@ -153,7 +141,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       .catch((error) => console.log("Error posting athlete to db: ", error));
   };
 
-  const executeLoginAndSetAthlete = async (authCode: string) => {
+  const executeLoginAndSetAthleteUsingAuthCode = async (authCode: string) => {
     console.log("Getting athlete data");
 
     await axios({
@@ -168,11 +156,16 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
     })
       .then(async (response) => {
         const athleteData = response.data.athlete;
-        const { refresh_token, access_token } = response.data
-        setAthlete({...response.data.athlete, refresh_token, access_token});
+        const { refresh_token, access_token } = response.data;
+        setAthlete({ ...response.data.athlete });
+        setRefreshToken(refresh_token);
+        setAccessToken(access_token);
 
         if (athleteData.username || athleteData.firstname) {
-          setCurrentUser({ ...currentUser, username: athleteData.username || athleteData.firstname});
+          setCurrentUser({
+            ...currentUser,
+            username: athleteData.username || athleteData.firstname,
+          });
         }
       })
       .catch((error) => {
@@ -180,55 +173,87 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       });
   };
 
-  // const getAthleteData = async (athlete: Athlete) => {
-  //   await axios({
-  //     baseURL: "https://www.strava.com/api/v3/athlete",
-  //     method: "get",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Bearer: ${athlete.access_token}`,
-  //     },
-  //   })
-  //     .then(async (response) => {
-  //       console.log("Auth response from access token flow: ", response);
-  //       console.log(
-  //         "Strava login data from access token flow: ",
-  //         response.data
-  //       );
-  //       setAthlete(response.data.access_token);
-  //     })
-  //     .catch((error) => {
-  //       console.log("Error getting login data using access token: ", error);
-  //     });
-  // };
+  const setAthleteUsingAccessToken = async (
+    _accessToken: string
+  ) => {
+    console.log("Getting athlete data using access token: ", _accessToken);
 
+    await axios({
+      baseURL: "https://www.strava.com/api/v3/athlete",
+      method: "get",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${_accessToken}`,
+      },
+    })
+      .then(async (response) => {
+        console.log("Response from access token flow: ", response);
+        const athleteData = response.data;
+        setAthlete({ ...response.data });
+
+        if (athleteData?.username || athleteData?.firstname) {
+          setCurrentUser({
+            ...currentUser,
+            username: athleteData.username || athleteData.firstname,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("Error getting login data using access token: ", error);
+      });
+  };
+
+  const refreshAccessToken = async (_refreshToken: string) => {
+    console.log("Refreshing access token using refesh token: ", _refreshToken);
+    await axios({
+      baseURL: discovery.tokenEndpoint,
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: {
+        client_id: clientID,
+        client_secret: clientSecret,
+        refresh_token: _refreshToken,
+        grant_type: "refresh_token",
+      },
+    })
+      .then(async (response) => {
+        console.log("Auth response from refresh accesstoken flow: ", response);
+        if (response.data?.access_token) {
+          console.log("Setting access token: ", response.data.access_token);
+          setAccessToken(response.data.access_token);
+        }
+      })
+      .catch((error) => {
+        console.log("Error getting access token using refresh token: ", error);
+      });
+  };
+
+  //Check for commitment progress
   useEffect(() => {
+    console.log("Checking for commitment progress");
     if (athlete && commitment?.goalValue) {
       if (commitment.goalValue) {
-        getAthleteActivityData(commitment, athlete.access_token).then(
-          (total) => {
-            console.log(
-              `total: ${total}, goalValue: ${
-                commitment.goalValue
-              } , progress: ${
-                commitment.goalValue
-                  ? (total / 100 / commitment.goalValue) * 100
-                  : "undefined"
-              }`
-            );
-            const progress = commitment.goalValue
-              ? (total / 100 / commitment.goalValue) * 100
-              : 0;
+        getAthleteActivityData(commitment, accessToken).then((total) => {
+          console.log(
+            `total: ${total}, goalValue: ${commitment.goalValue} , progress: ${
+              commitment.goalValue
+                ? (total / 100 / commitment.goalValue) * 100
+                : "undefined"
+            }`
+          );
+          const progress = commitment.goalValue
+            ? (total / 100 / commitment.goalValue) * 100
+            : 0;
 
-              if(commitment.progress !== progress){
-                setCommitment({ ...commitment, progress });
-              }
-            }
-          
-        );
+          if (commitment.progress !== progress) {
+            setCommitment({ ...commitment, progress });
+          }
+        });
       }
-
-  }}, [athlete, commitment]);
+    }
+  }, [athlete, commitment]);
 
   //TODO axios this up
   const getAthleteActivityData = async (

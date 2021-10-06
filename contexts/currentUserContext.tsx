@@ -29,14 +29,13 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
   console.log("Current user:  ", currentUser);
 
   useEffect(() => {
-    const user: Partial<User> = createWeb3User(address, injectedChain);
+    const user: Partial<User> = createWeb3User(currentUser, address, injectedChain);
 
     setCurrentUser(user);
   }, [injectedProvider, injectedChain, address]);
 
   useEffect(() => {
     if (daiContract && injectedProvider) {
-      console.log("Adding balances to current user");
       addUserBalances(injectedProvider, currentUser, daiContract);
     }
   }, [daiContract, injectedProvider]);
@@ -63,14 +62,15 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
   };
 
   const createWeb3User = (
+    currentUser: Partial<User>,
     accountAddress: string | "",
     network: Network
   ): Partial<User> => {
-    return {
+    return {...currentUser,
       type: "web3",
       attributes: { "custom:account_address": accountAddress },
       network: network,
-      username: accountAddress,
+      username: currentUser?.username || accountAddress,
     };
   };
 
