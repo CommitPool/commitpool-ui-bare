@@ -47,8 +47,7 @@ const parseCommitmentFromContract = (commitment: any, activities: Activity[]): P
     unit: "mi",
     activityName
   };
-  
-  console.log("Parsed commitment: ", _commitment);
+
   return _commitment;
 };
 

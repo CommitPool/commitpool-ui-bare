@@ -6,15 +6,15 @@ import React, {
   useRef,
 } from "react";
 import { Network } from "../types";
-import Web3Modal from "web3modal";
+import Web3Modal, { providers } from "web3modal";
 
-import { supportedChains } from "../utils/chain";
+import { chainByNetworkId, supportedChains } from "../utils/chain";
 import {
   deriveChainId,
   deriveSelectedAddress,
   getProviderOptions,
 } from "../utils/web3Modal";
-import { ethers } from "ethers";
+import { ethers, Signer } from "ethers";
 
 //TODO refactor to Ethers
 const defaultModal = new Web3Modal({
@@ -47,13 +47,40 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
   const [web3Modal, setWeb3Modal] = useState(defaultModal);
   // const { errorToast } = useContext(OverlayContext);
 
+  //Load provider from cache or connect default
+  useEffect(() => {
+    if (window.localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER")) {
+      console.log("Loading provider from cache");
+      connectProvider();
+    }
+
+    // else {
+    //   console.log("Connecting default provider");
+    //   const connectDefaultProvider = () => {
+    //     // const [web3ModalProvider, web3] = await web3ModalToWeb3(defaultModal);
+    //     const defaultProvider = ethers.getDefaultProvider("polygon", { infura: "fb9dd1f3476f44ad92158c24ba5120c6"});
+    //     const chainId = defaultProvider?._network?.chainId || 137;
+    //     const chain = chainByNetworkId("137")
+
+    //     console.log(defaultProvider)
+    //     console.log(chain)
+
+    //     setInjectedChain(chain);
+    //     setInjectedProvider(defaultProvider);
+    //   };
+
+    //   connectDefaultProvider();
+    // }
+  }, []);
+
   const hasListeners: any = useRef(null);
 
   const connectProvider = async () => {
     const providerOptions = getProviderOptions();
 
-    console.log("providerOption: ", providerOptions);
+    console.log("providerOptions: ", providerOptions);
     if (!providerOptions) {
+      setInjectedChain(undefined);
       setInjectedProvider(null);
       setAddress(null);
       setWeb3Modal(defaultModal);
@@ -68,33 +95,17 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
       theme: "dark",
     });
 
-    const provider = await localWeb3Modal.connect();
-    console.log("Provider: ", provider);
-    provider.selectedAddress = deriveSelectedAddress(provider);
-    const chainId = await deriveChainId(provider);
+    const [web3ModalProvider, web3] = await web3ModalToWeb3(localWeb3Modal);
+    const chain = chainFromProvider(web3ModalProvider);
 
-    const chain = {
-      ...supportedChains[chainId],
-      chainId,
-    };
-    console.log("connecting provider");
-    const web3: any = new ethers.providers.Web3Provider(provider);
-    console.log("Web3 instance: ", web3);
     if (web3?.provider?.selectedAddress) {
       const address = web3.provider.selectedAddress;
       setInjectedProvider(web3);
-      // setPageState('injectedProvider', web3);
       setAddress(address);
       setInjectedChain(chain);
       setWeb3Modal(localWeb3Modal);
     }
   };
-
-  useEffect(() => {
-    if (window.localStorage.getItem("WEB3_CONNECT_CACHED_PROVIDER")) {
-      connectProvider();
-    }
-  }, []);
 
   // This useEffect handles the initialization of EIP-1193 listeners
   // https://eips.ethereum.org/EIPS/eip-1193
@@ -135,11 +146,37 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
     await connectProvider();
   };
 
-  const disconnectDapp = async () => {
+  const disconnectDapp = () => {
     setInjectedProvider(null);
     setAddress(null);
     setWeb3Modal(defaultModal);
     web3Modal.clearCachedProvider();
+  };
+
+  const web3ModalToWeb3 = async (
+    web3Modal: Web3Modal
+  ): Promise<[Web3Modal, any]> => {
+    const web3Modalprovider = await web3Modal.connect();
+    web3Modalprovider.selectedAddress =
+      deriveSelectedAddress(web3Modalprovider);
+    const web3 = new ethers.providers.Web3Provider(web3Modalprovider);
+
+    console.log("InjectedProvider: ", web3);
+    console.log("Web3Modal: ", web3Modalprovider);
+
+    return [web3Modalprovider, web3];
+  };
+
+  const chainFromProvider = (web3Provider: any): Network => {
+    const chainId = deriveChainId(web3Provider);
+
+    const chain = {
+      ...supportedChains[chainId],
+      chainId,
+    };
+
+    console.log("Chain: ", chain);
+    return chain;
   };
 
   return (

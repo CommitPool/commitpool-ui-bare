@@ -171,8 +171,8 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
         const { refresh_token, access_token } = response.data
         setAthlete({...response.data.athlete, refresh_token, access_token});
 
-        if (athleteData.username) {
-          setCurrentUser({ ...currentUser, username: athleteData.username });
+        if (athleteData.username || athleteData.firstname) {
+          setCurrentUser({ ...currentUser, username: athleteData.username || athleteData.firstname});
         }
       })
       .catch((error) => {

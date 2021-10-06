@@ -1,5 +1,6 @@
 import Torus from "@toruslabs/torus-embed";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import { Network } from "../types";
 import { chainByID, chainByNetworkId } from "./chain";
 
 //TODO Detect connected network and notify user to change to Polygon
@@ -13,7 +14,7 @@ const isInjected = () => {
   return id;
 };
 
-export const attemptInjectedChainData = () =>
+export const attemptInjectedChainData = (): Network =>
   isInjected() ? chainByID(window.ethereum.chainId) : chainByID("137");
 
 const addNetworkProviders = (chainData: Network) => {
@@ -62,7 +63,7 @@ const addNetworkProviders = (chainData: Network) => {
 export const getProviderOptions = () =>
   addNetworkProviders(attemptInjectedChainData());
 
-export const deriveChainId = async (provider: any) => {
+export const deriveChainId = (provider: any) => {
   console.log("Deriving chain ID from: ", provider);
   if (provider.isMetaMask || provider.isTorus) {
     return provider.chainId;
@@ -72,7 +73,7 @@ export const deriveChainId = async (provider: any) => {
   }
 };
 
-export const deriveSelectedAddress = (provider: any) => {
+export const deriveSelectedAddress = (provider: any): string | undefined => {
   if (provider.isMetaMask || provider.isTorus) {
     return provider.selectedAddress;
   }
@@ -80,5 +81,5 @@ export const deriveSelectedAddress = (provider: any) => {
   if (provider.wc) {
     return provider.accounts[0];
   }
-  return null;
+  return undefined;
 };

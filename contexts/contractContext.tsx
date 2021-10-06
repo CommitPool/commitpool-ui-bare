@@ -7,11 +7,15 @@ import { Contract, ethers } from "ethers";
 type ContractContextType = {
   spcContract?: Contract;
   daiContract?: Contract;
+  setSpcContract: (contract: Contract) => void;
+  setDaiContract: (contract: Contract) => void;
 };
 
 export const ContractContext = createContext<ContractContextType>({
   spcContract: undefined,
   daiContract: undefined,
+  setSpcContract: (contract: Contract) => {},
+  setDaiContract: (contract: Contract) => {},
 });
 
 interface ContractProps {
@@ -36,25 +40,31 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
 
   const { injectedChain, injectedProvider } = useInjectedProvider();
 
-  console.log("DAI contract: ", daiContract);
-  console.log("SPC contract: ", spcContract);
-
   useEffect(() => {
-    console.log("Loading contract");
 
     const initContract = async () => {
       try {
-        const _daiContract: Contract = new ethers.Contract(
+        let _daiContract: Contract = new ethers.Contract(
           daiAddrs[injectedChain.network],
           daiAbi,
-          injectedProvider
+          injectedProvider 
         );
 
-        const _spcContract: Contract = new ethers.Contract(
+        let _spcContract: Contract = new ethers.Contract(
           spcAddrs[injectedChain.network],
           spcAbi,
           injectedProvider
         );
+
+        if(injectedProvider.getSigner()){
+          console.log("Connecting signer")
+          _daiContract = _daiContract.connect(injectedProvider.getSigner())
+          _spcContract = _spcContract.connect(injectedProvider.getSigner())
+        }
+
+        console.log("Setting DAI contract: ", _daiContract);
+        console.log("Setting SPC contract: ", _spcContract);
+
         setDaiContract(_daiContract);
         setSpcContract(_spcContract);
       } catch (e) {
@@ -63,26 +73,15 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
     };
 
     if (injectedProvider && injectedChain?.network) {
+      console.log("Loading contracts");
+
       initContract();
     }
   }, [injectedProvider, injectedChain]);
 
-  useEffect(() => {
-    if (injectedProvider && daiContract && spcContract) {
-      console.log(
-        "Updating contract with signer from: ",
-        injectedProvider
-      );
-      const _daiContract = daiContract.connect(injectedProvider.provider);
-      const _spcContract = spcContract.connect(injectedProvider.provider);
-      setDaiContract(_daiContract);
-      setSpcContract(_spcContract);
-    }
-  }, [injectedProvider]);
-
   return (
     <ContractContext.Provider
-      value={{ daiContract, spcContract}}
+      value={{ daiContract, spcContract, setSpcContract, setDaiContract }}
     >
       {children}
     </ContractContext.Provider>
@@ -90,7 +89,6 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
 };
 
 export const useContracts = () => {
-  const { spcContract, daiContract } =
-    useContext(ContractContext);
+  const { spcContract, daiContract } = useContext(ContractContext);
   return { spcContract, daiContract };
 };

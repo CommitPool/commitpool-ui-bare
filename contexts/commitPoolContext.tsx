@@ -37,20 +37,6 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
   const { currentUser } = useCurrentUser();
   const { spcContract } = useContracts();
 
-  const refreshCommitment = async (user: Partial<User>, contract: Contract, activities: Activity[]) => {
-    if (user.attributes?.["custom:account_address"] && contract) {
-      console.log("Getting commitment")
-      const _address = user.attributes["custom:account_address"];
-      const commitment = await contract.commitments(_address);
-      const _commitment: Partial<Commitment> = parseCommitmentFromContract(
-        commitment,
-        activities
-      );
-      console.log("Setting commitment: ", _commitment)
-      setCommitment(_commitment);
-    }
-  };
-
   //Check for commitment when user is logged in
   useEffect(() => {
     if (!commitment && currentUser && spcContract && activities) {
@@ -123,6 +109,24 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
       }
     }
   }, [commitment]);
+
+  const refreshCommitment = async (
+    user: Partial<User>,
+    contract: Contract,
+    activities: Activity[]
+  ) => {
+    if (user.attributes?.["custom:account_address"] && contract) {
+      console.log("Getting commitment");
+      const _address = user.attributes["custom:account_address"];
+      const commitment = await contract.commitments(_address);
+      const _commitment: Partial<Commitment> = parseCommitmentFromContract(
+        commitment,
+        activities
+      );
+      console.log("Setting commitment: ", _commitment);
+      setCommitment(_commitment);
+    }
+  };
 
   return (
     <CommitPoolContext.Provider

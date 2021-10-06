@@ -30,7 +30,6 @@ type TrackPageProps = {
   navigation: TrackPageNavigationProps;
 };
 
-//TODO Contr
 const TrackPage = ({ navigation }: TrackPageProps) => {
   // useStravaRefresh();
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
@@ -55,10 +54,10 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   )?.oracle;
 
   const processCommitmentProgress = async () => {
-    if (spcContract && currentUser?.username && oracleAddress) {
+    if (spcContract && currentUser?.attributes?.["custom:account_address"] && oracleAddress) {
       await spcContract
         .requestActivityDistance(
-          currentUser.username,
+          currentUser.attributes["custom:account_address"],
           oracleAddress,
           //to do - move to env and/or activity state
           "9ce5c4e09dda4c3687bac7a2f676268f",
