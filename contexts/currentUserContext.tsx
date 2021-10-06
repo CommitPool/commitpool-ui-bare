@@ -66,11 +66,12 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
     accountAddress: string | "",
     network: Network
   ): Partial<User> => {
+    const userName = currentUser?.username ? currentUser.username : accountAddress
     return {...currentUser,
       type: "web3",
       attributes: { "custom:account_address": accountAddress },
       network: network,
-      username: currentUser?.username || accountAddress,
+      username: userName,
     };
   };
 

@@ -150,8 +150,6 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
                   <Text
                     text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
                   />
-                </View>
-                <View style={styles.commitmentValues}>
                   <Text text={`Progression`} />
                   <ProgressCircle progress={commitment?.progress || 0} />
                 </View>
@@ -196,12 +194,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
   commitmentValues: {
     flex: 1,
     marginTop: 20,
-    alignContent: "flex-start",
+    alignContent: "center",
     alignItems: "center",
   },
   helpButton: {

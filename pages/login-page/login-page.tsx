@@ -78,9 +78,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
       <View style={styles.loginPage}>
         {currentUser?.attributes?.["custom:account_address"] ? (
           <View>
-            <Text
-              text={`You're logged in as ${currentUser.username}`}
-            />
+            <Text text={`You're logged in as ${currentUser.username}`} />
             <Text
               text={`${Number(currentUser.nativeTokenBalance).toFixed(
                 2
