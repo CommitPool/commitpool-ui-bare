@@ -49,7 +49,7 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
 
   useEffect(() => {
     if (spcContract) {
-      console.log("Getting activities");
+      console.log("Getting activities from: ", spcContract);
       const buildActivityArray = async () => {
         const _activities: Activity[] = [];
         let loading: boolean = true;
@@ -58,8 +58,11 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
         while (loading) {
           try {
             const key = await spcContract.activityKeyList(index);
+
             const activity = await spcContract.activities(key);
+
             if (activity.exists && activity.allowed) {
+              console.log("Parsing activity: ", activity);
               const clone = Object.assign({}, activity);
               clone.key = key;
               clone.name = activity.name;

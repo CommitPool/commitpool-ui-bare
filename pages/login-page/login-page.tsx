@@ -78,9 +78,15 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
       <View style={styles.loginPage}>
         {currentUser?.attributes?.["custom:account_address"] ? (
           <View>
-            <Text text={`You're logged in to ${currentUser.username}`} />
-            <Text text={`MATIC balance:  ${currentUser.nativeTokenBalance}`} />
-            <Text text={`DAI balance: ${currentUser.daiBalance}`} />
+            <Text
+              text={`You're logged in as ${currentUser.username}`}
+            />
+            <Text
+              text={`${Number(currentUser.nativeTokenBalance).toFixed(
+                2
+              )} MATIC`}
+            />
+            <Text text={`${Number(currentUser.daiBalance).toFixed(2)} DAI`} />
           </View>
         ) : (
           <Fragment>

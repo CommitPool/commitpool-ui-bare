@@ -38,7 +38,7 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
   const [spcContract, setSpcContract] = useState<Contract>();
   const [daiContract, setDaiContract] = useState<Contract>();
 
-  const { injectedChain, injectedProvider } = useInjectedProvider();
+  const { injectedChain, injectedProvider, address } = useInjectedProvider();
 
   useEffect(() => {
 
@@ -56,10 +56,9 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
           injectedProvider
         );
 
-        if(injectedProvider.getSigner()){
-          console.log("Connecting signer")
-          _daiContract = _daiContract.connect(injectedProvider.getSigner())
-          _spcContract = _spcContract.connect(injectedProvider.getSigner())
+        if(injectedProvider.getSigner() && address){
+          _daiContract = _daiContract.connect(injectedProvider.getSigner(address))
+          _spcContract = _spcContract.connect(injectedProvider.getSigner(address))
         }
 
         console.log("Setting DAI contract: ", _daiContract);
