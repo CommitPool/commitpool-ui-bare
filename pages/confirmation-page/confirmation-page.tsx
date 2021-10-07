@@ -50,10 +50,11 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
       validCommitmentRequest(commitment, activities) &&
       spcContract &&
       daiContract &&
-      athlete
+      athlete &&
+      currentUser.attributes?.["custom:account_address"]
     ) {
       const allowance = await daiContract.allowance(
-        currentUser?.attributes?.["custom:account_address"],
+        currentUser.attributes["custom:account_address"],
         spcContract.address
       );
 

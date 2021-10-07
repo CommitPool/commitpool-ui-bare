@@ -114,13 +114,13 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
 
   //finally post strava user to db
   useEffect(() => {
-    if (athlete) {
+    if (athlete && refreshToken !== "") {
       console.log("Posting athlete to DB");
-      storeAthleteInDb(athlete);
+      storeAthleteInDb(athlete, refreshToken);
     }
-  }, [athlete]);
+  }, [athlete, refreshToken]);
 
-  const storeAthleteInDb = async (athlete: Athlete) => {
+  const storeAthleteInDb = async (athlete: Athlete, refresh_token: string) => {
     await axios({
       url: "https://test2.dcl.properties/user",
       method: "post",
@@ -130,7 +130,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
       },
       data: {
         address: athlete.id,
-        token: accessToken,
+        token: refresh_token,
       },
     })
       .then((response) => {
