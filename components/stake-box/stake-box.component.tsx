@@ -6,33 +6,24 @@ import {
   View,
   TextInput,
 } from "react-native";
-import { useAppDispatch } from "../../redux/store";
 
 import { Text } from "..";
-
-import {
-  updateCommitment,
-  updateStakeSet,
-} from "../../redux/commitpool/commitpoolSlice";
-import useCommitment from "../../hooks/useCommitment";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface StakeBoxProps {
   style?: StyleProp<TextStyle>;
 }
 
 const StakeBox = ({ style }: StakeBoxProps) => {
-  const dispatch = useAppDispatch();
+  const { commitment, setCommitment } = useCommitPool();
 
-  const { commitment } = useCommitment();
-  const { stake }: {stake: number} = commitment;
-
+  //TODO toast on invalid input
   const onStakeInput = (stake: string) => {
     const _stake = Number.parseFloat(stake);
     if (!isNaN(_stake) && validStake(_stake)) {
-      dispatch(updateCommitment({ stake: _stake }));
-      dispatch(updateStakeSet(true));
+      setCommitment({ ...commitment, stake: _stake, stakeSet: true });
     } else {
-      dispatch(updateStakeSet(false));
+      setCommitment({ ...commitment, stake: undefined, stakeSet: false });
     }
   };
 
@@ -42,7 +33,7 @@ const StakeBox = ({ style }: StakeBoxProps) => {
         <Text text={"Your stake amount"} />
         <View style={styles.valueInput}>
           <TextInput
-            defaultValue={stake?.toString()}
+            defaultValue={commitment?.stake?.toString()}
             keyboardType={"number-pad"}
             style={styles.textInput}
             onChangeText={(stake) => onStakeInput(stake)}
@@ -50,10 +41,10 @@ const StakeBox = ({ style }: StakeBoxProps) => {
           <Text text={`DAI`} />
         </View>
       </View>
-      {stake >= 100 ? (
+      {commitment?.stake && commitment.stake >= 100 ? (
         <Text
           style={styles.textHighAlert}
-          text={`You're staking ${stake.toString()} DAI. That's a big commitment!`}
+          text={`You're staking ${commitment.stake.toString()} DAI. That's a big commitment!`}
         />
       ) : undefined}
     </Fragment>
@@ -92,8 +83,8 @@ const styles = StyleSheet.create({
   },
   container: {
     justifyContent: "center",
-    alignItems: "center"
-  }
+    alignItems: "center",
+  },
 });
 
 export default StakeBox;

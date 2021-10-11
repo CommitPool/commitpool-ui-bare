@@ -1,4 +1,4 @@
-interface Commitment {
+export interface Commitment {
   activityKey: string;
   exists: boolean;
   met: boolean;
@@ -8,16 +8,20 @@ interface Commitment {
   reportedValue: number;
   stake: number;
   unit: string;
+  activitySet?: boolean;
+  activityName?: string;
+  stakeSet?: boolean;
+  progress?: number;
 }
 
-interface Athlete {
+export interface Athlete {
+  id: number;
   username?: string;
   firstname?: string;
-  id: number;
   profile_medium?: string;
 }
 
-interface Activity {
+export interface Activity {
   key: string;
   name: string;
   oracle: string;
@@ -25,12 +29,12 @@ interface Activity {
   exists: boolean;
 }
 
-interface DropdownItem {
+export interface DropdownItem {
   label: string;
   value: string;
 }
 
-interface Network {
+export interface Network {
   name: string;
   short_name: string;
   chain: string;
@@ -41,18 +45,31 @@ interface Network {
   rpc_url: string;
   block_explorer: string;
   hub_sort_order?: number;
-  spcAddress?: string;
-  daiAddress?: string;
-  linkAddress?: string;
+  spcAddress: string;
+  daiAddress: string;
+  linkAddress: string;
 }
 
-type TransactionTypes =
+export type TransactionTypes =
   | "approve"
   | "depositAndCommit"
   | "requestActivityDistance"
   | "processCommitmentUser";
 
-type TransactionDetails = {
+export type TransactionDetails = {
   methodCall: TransactionTypes;
   txReceipt: Transaction;
+};
+
+
+export type User = {
+  type: string;
+  attributes: {
+    "custom:account_address": string;
+    [key: string]: string;
+  };
+  network: Network;
+  username: string;
+  nativeTokenBalance: string;
+  daiBalance: string;
 };

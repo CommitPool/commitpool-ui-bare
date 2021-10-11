@@ -1,6 +1,5 @@
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { Fragment, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
 import {
@@ -12,13 +11,11 @@ import {
 } from "../../components";
 
 import strings from "../../resources/strings";
-import { RootState, useAppDispatch } from "../../redux/store";
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
-import { parseCommitmentFromContract } from "../../utils/commitment";
-import useContracts from "../../hooks/useContracts";
-import useWeb3 from "../../hooks/useWeb3";
-import { ethers } from "ethers";
-import useStravaAthlete from "../../hooks/useStravaAthlete";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
+import { useStrava } from "../../contexts/stravaContext";
+import { useContracts } from "../../contexts/contractContext";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { useCurrentUser } from "../../contexts/currentUserContext";
 
 type LoginPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -30,49 +27,44 @@ type LoginPageProps = {
 };
 
 const LoginPage = ({ navigation }: LoginPageProps) => {
-  const dispatch = useAppDispatch();
-
-  const { account, isLoggedIn, requestWallet } = useWeb3();
+  const { requestWallet } = useInjectedProvider();
   const [popUpVisible, setPopUpVisible] = useState(false);
 
-  const { stravaIsLoggedIn } = useStravaAthlete();
-  const { singlePlayerCommit } = useContracts();
-
-  const { activitySet, stakeSet } = useSelector(
-    (state: RootState) => state.commitpool
-  );
+  const { athlete } = useStrava();
+  const { currentUser } = useCurrentUser();
+  const { commitment } = useCommitPool();
 
   //When account has an commitment, write to state
   useEffect(() => {
-    const getCommitmentAndRoute = async () => {
-      console.log(`Checking for commitment for account ${account}`);
-      const commitment = await singlePlayerCommit.commitments(account);
-      console.log("Commitment from contract: ", commitment);
-      if (commitment.exists) {
-        const _commitment: Commitment | undefined = parseCommitmentFromContract(commitment);
-        if(_commitment){
-          dispatch(updateCommitment({ ..._commitment }));
-          navigation.navigate("Track");
-        }
-      }
-    };
-
-    if (account && ethers.utils.isAddress(account) && singlePlayerCommit) {
-      getCommitmentAndRoute();
+    if (commitment?.exists) {
+      navigation.navigate("Track");
     }
-  }, [account, singlePlayerCommit]);
+  }, [commitment]);
 
   const onNext = () => {
-    if (isLoggedIn && activitySet && stakeSet && stravaIsLoggedIn) {
+    const address = currentUser.attributes?.["custom:account_address"];
+    if (
+      address &&
+      commitment?.exists &&
+      commitment?.activitySet &&
+      commitment?.stakeSet &&
+      athlete?.id
+    ) {
       //All parameters set, go to commitment confirmation screen
       navigation.navigate("Confirmation");
-    } else if (isLoggedIn && activitySet && stakeSet && !stravaIsLoggedIn) {
+    } else if (
+      address &&
+      commitment?.exists &&
+      commitment?.activitySet &&
+      commitment?.stakeSet &&
+      !athlete?.id
+    ) {
       //All parameters set, but need strava account data
       navigation.navigate("ActivitySource");
-    } else if (isLoggedIn) {
+    } else if (address) {
       //Wallet connected, go to commitment creation flow
       navigation.navigate("ActivityGoal");
-    } else if (!isLoggedIn) {
+    } else if (!address) {
       //Wallet not yet connected
       setPopUpVisible(true);
     }
@@ -86,9 +78,15 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
         text={strings.login.alert}
       />
       <View style={styles.loginPage}>
-        {isLoggedIn ? (
+        {currentUser?.attributes?.["custom:account_address"] ? (
           <View>
-            <Text text={`You're logged in to ${account}`} />
+            <Text text={`You're logged in as ${currentUser.username}`} />
+            <Text
+              text={`${Number(currentUser.nativeTokenBalance).toFixed(
+                2
+              )} MATIC`}
+            />
+            <Text text={`${Number(currentUser.daiBalance).toFixed(2)} DAI`} />
           </View>
         ) : (
           <Fragment>

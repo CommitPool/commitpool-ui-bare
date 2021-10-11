@@ -3,38 +3,24 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
 import { LayoutContainer, Text, Button } from "../../components";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
-import {
-  reset as resetCommitments
-} from "../../redux/commitpool/commitpoolSlice";
-import { useAppDispatch } from "../../redux/store";
-import {
-  reset as resetTransactions
-} from "../../redux/transactions/transactionSlice";
-import {
-  reset as resetWeb3
-} from "../../redux/web3/web3Slice";
 import strings from "../../resources/strings";
 
-type TestPageNavigationProps = StackNavigationProp<
-  RootStackParamList,
-  'Test'
->;
+type TestPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
 
 type TestPageProps = {
   navigation: TestPageNavigationProps;
 };
 
 const TestPage = ({ navigation }: TestPageProps) => {
-  const dispatch = useAppDispatch();
+  const { setCommitment } = useCommitPool();
 
   const clearStateAndRoute = () => {
-    dispatch(resetCommitments({}));
-    dispatch(resetTransactions({}));
-    dispatch(resetWeb3({}));
+    setCommitment({});
     navigation.navigate("ActivityGoal");
     window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
-  }
+  };
   return (
     <LayoutContainer>
       <View style={styles.header}>
@@ -66,27 +52,27 @@ const styles = StyleSheet.create({
     lineHeight: 42,
     alignItems: "flex-end",
     textAlign: "center",
-    color: "#FFFFFF"
+    color: "#FFFFFF",
   },
-  container:{
-    flexDirection: 'column',
+  container: {
+    flexDirection: "column",
     width: "100%",
     height: "100%",
-    padding: 14
+    padding: 14,
   },
-  header:{
-    marginBottom: 37
+  header: {
+    marginBottom: 37,
   },
   content: {
-    flex: 1
+    flex: 1,
   },
-  footer:{
+  footer: {
     alignSelf: "flex-end",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    width: "100%"
-  }
+    width: "100%",
+  },
 });
 
 export default TestPage;

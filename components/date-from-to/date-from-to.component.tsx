@@ -5,61 +5,69 @@ import { StyleSheet, View, TextInput } from "react-native";
 import { Text } from "..";
 
 import { DateTime } from "luxon";
-import { useAppDispatch } from "../../redux/store";
 
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
-import useCommitment from "../../hooks/useCommitment";
 import { parseSecondTimestampToFullString } from "../../utils/dateTime";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface DateFromTo {
   children?: React.ReactNode;
 }
 
 const DateFromTo = ({ children }: DateFromTo) => {
-  const [startIn, setStartIn] = useState("0");
-  const [endIn, setEndIn] = useState("7");
+  const [startIn, setStartIn] = useState<string>("0");
+  const [endIn, setEndIn] = useState<string>("7");
 
-  const { commitment } = useCommitment();
-
-  const dispatch = useAppDispatch();
+  const { commitment, setCommitment } = useCommitPool();
 
   useEffect(() => {
     const updateDates = () => {
-      const startTime = calculateStartDay(startIn);
-      const endTime = calculateEndDay(startTime, endIn);
-      dispatch(updateCommitment({ startTime, endTime }));
+      const [startTime, endTime] = calculateStartAndEnd(startIn, endIn);
+      console.log("Setting commitment: ", {
+        ...commitment,
+        startTime,
+        endTime,
+      });
+      setCommitment({ ...commitment, startTime, endTime });
     };
 
     updateDates();
   }, [startIn, endIn]);
 
-  const calculateStartDay = (input: string) => {
-    const numericInput: number = Number(input);
-    if (numericInput === 0) {
-      return DateTime.now().toSeconds();
-    } else if (numericInput > 0) {
-      return DateTime.now()
-        .plus({ days: numericInput })
-        .set({ hour: 0, minute: 0 })
+  const calculateStartAndEnd = (
+    _start: string,
+    _end: string
+  ): [number, number] => {
+    const start: number = Number(_start);
+    const end: number = Number(_end);
+    let startTimestamp: number;
+    let endTimestamp: number;
+    if (start === 0) {
+      startTimestamp = DateTime.now().toSeconds();
+      endTimestamp = DateTime.now()
+        .plus({ days: Number(_end) })
+        .startOf("day")
         .toSeconds();
+    } else if (start > 0) {
+      startTimestamp = DateTime.now()
+        .plus({ days: start })
+        .startOf("day")
+        .toSeconds();
+      endTimestamp = DateTime.fromSeconds(startTimestamp)
+        .plus({ days: end })
+        .endOf("day")
+        .toSeconds();
+    } else if (commitment?.startTime && commitment?.endTime) {
+      startTimestamp = commitment.startTime;
+      endTimestamp = commitment.endTime;
     } else {
-      return commitment.startTime;
-    }
-  };
-
-  const calculateEndDay = (from: number, input: string) => {
-    const numericInput: number = Number(input);
-    const _startDate = DateTime.fromSeconds(from);
-    if (numericInput === 0) {
-      return _startDate.set({ hour: 23, minute: 59 }).toSeconds();
-    } else if (numericInput > 0) {
-      return _startDate
-        .plus({ days: numericInput })
+      startTimestamp = DateTime.now().toSeconds();
+      endTimestamp = DateTime.fromSeconds(startTimestamp)
+        .plus({ days: 7 })
         .set({ hour: 23, minute: 59 })
         .toSeconds();
-    } else {
-      return commitment.endTime;
     }
+
+    return [startTimestamp, endTimestamp];
   };
 
   return (
@@ -83,11 +91,15 @@ const DateFromTo = ({ children }: DateFromTo) => {
       </View>
       <View>
         <Text
-          text={`Starts on: ${parseSecondTimestampToFullString(commitment.startTime)} `}
+          text={`Starts on: ${parseSecondTimestampToFullString(
+            commitment?.startTime
+          )} `}
           style={styles.dateView}
         />
         <Text
-          text={`Ends on:  ${parseSecondTimestampToFullString(commitment.endTime)}`}
+          text={`Ends on:  ${parseSecondTimestampToFullString(
+            commitment?.endTime
+          )}`}
           style={styles.dateView}
         />
       </View>

@@ -1,28 +1,29 @@
 import React from "react";
 
-import { useAppDispatch } from "../../redux/store";
-
 import { StyleSheet, View } from "react-native";
 import { Text, DropDownPicker } from "..";
-import { updateCommitment } from "../../redux/commitpool/commitpoolSlice";
-import useActivities from "../../hooks/useActivities";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { DropdownItem } from "../../types";
 
 interface ActivitySelectorProps {
   text: string;
 }
 
 const ActivitySelector = ({ text }: ActivitySelectorProps) => {
-  const { formattedActivities } = useActivities();
-  const dispatch = useAppDispatch();
+  const { formattedActivities, commitment, setCommitment } = useCommitPool();
 
   const onSelect = (activityKey: string) => {
-    dispatch(updateCommitment({ activityKey }));
+    console.log("Setting commitment: ", { ...commitment, activityKey });
+    setCommitment({ ...commitment, activityKey });
   };
 
   return (
     <View style={styles.activitySelector}>
       <Text text={text} />
-      <DropDownPicker itemsToSelect={formattedActivities as DropdownItem[]} onSelect={onSelect} />
+      <DropDownPicker
+        itemsToSelect={formattedActivities as DropdownItem[]}
+        onSelect={onSelect}
+      />
     </View>
   );
 };
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
-    margin: 18
+    margin: 18,
   },
 });
 

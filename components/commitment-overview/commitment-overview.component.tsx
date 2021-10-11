@@ -12,14 +12,14 @@ import {
 import strings from "../../resources/strings";
 import StakeBox from "../stake-box/stake-box.component";
 import { parseSecondTimestampToFullString} from "../../utils/dateTime"
-import useCommitment from "../../hooks/useCommitment";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface CommitmentOverviewProps {
   editing: boolean;
 }
 
 const CommitmentOverview = ({ editing }: CommitmentOverviewProps) => {
-  const { commitment, activityName } = useCommitment();
+  const { commitment } = useCommitPool();
   return (
     <View style={styles.commitment}>
       {editing ? (
@@ -38,26 +38,26 @@ const CommitmentOverview = ({ editing }: CommitmentOverviewProps) => {
           <Text text={strings.confirmation.commitment.text} />
           <View style={styles.commitmentValues}>
             <Text
-              text={`${strings.confirmation.commitment.activity} ${activityName}`}
+              text={`${strings.confirmation.commitment.activity} ${commitment?.activityName}`}
             />
             <Text
-              text={`${strings.confirmation.commitment.distance} ${commitment.goalValue} miles`}
+              text={`${strings.confirmation.commitment.distance} ${commitment?.goalValue} miles`}
             />
             <Text
               text={`${
                 strings.confirmation.commitment.startDate
-              } ${parseSecondTimestampToFullString(commitment.startTime)}`}
+              } ${parseSecondTimestampToFullString(commitment?.startTime)}`}
             />
             <Text
               text={`${
                 strings.confirmation.commitment.endDate
-              } ${parseSecondTimestampToFullString(commitment.endTime)}`}
+              } ${parseSecondTimestampToFullString(commitment?.endTime)}`}
             />
           </View>
           <View style={styles.commitmentValues}>
             <Text text={strings.confirmation.commitment.stake} />
 
-            <Text text={`${commitment.stake} DAI`} />
+            <Text text={`${commitment?.stake} DAI`} />
           </View>
         </Fragment>
       )}

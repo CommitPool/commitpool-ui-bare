@@ -3,8 +3,9 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
 import { LayoutContainer, Text, Button } from "../../components";
+import { useCurrentUser } from "../../contexts/currentUserContext";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import strings from "../../resources/strings";
-import useWeb3 from "../../hooks/useWeb3";
 
 type LandingPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -16,12 +17,13 @@ type LandingPageProps = {
 };
 
 const LandingPage = ({ navigation }: LandingPageProps) => {
-  const { account, requestWallet } = useWeb3();
+  const { currentUser } = useCurrentUser();
+  const { requestWallet } = useInjectedProvider();
 
   return (
     <LayoutContainer>
-      {console.log("Act: " + account)}
-      {account ? (
+      {console.log("Act: " + currentUser?.username)}
+      {currentUser?.username ? (
         <View style={styles.landingPage}>
           <Text text={strings.landing.intro} />
           <Button

@@ -14,9 +14,9 @@ import { RootStackParamList } from "..";
 
 import globalStyles from "../../resources/styles/styles.js";
 import strings from "../../resources/strings";
-import useCommitment from "../../hooks/useCommitment";
-import useWeb3 from "../../hooks/useWeb3";
-import useStravaAthlete from "../../hooks/useStravaAthlete";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { useStrava } from "../../contexts/stravaContext";
+import { useCurrentUser } from "../../contexts/currentUserContext";
 
 type ActivitySourcePageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -30,11 +30,9 @@ type ActivitySourcePageProps = {
 const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
 
-  const { athlete, stravaIsLoggedIn, handleStravaLogin} = useStravaAthlete();
-
-  const { isLoggedIn } = useWeb3();
-
-  const { commitment } = useCommitment();
+  const { athlete, handleStravaLogin} = useStrava();
+  const { commitment } = useCommitPool();
+  const { currentUser } = useCurrentUser();
 
   return (
     <LayoutContainer>
@@ -46,7 +44,7 @@ const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
       />
       <Text style={globalStyles.headerOne} text={strings.activitySource.notLoggedIn.text} />
       <View style={styles.intro}>
-        {stravaIsLoggedIn ? (
+        {athlete?.id ? (
           <Fragment>
             <Text
               text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
@@ -77,11 +75,11 @@ const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
         <Button
           text={strings.footer.next}
           onPress={() => {
-            if(commitment.exists && stravaIsLoggedIn && isLoggedIn) {
+            if(commitment?.exists && athlete?.id && currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Track");
-            } else if (stravaIsLoggedIn && isLoggedIn) {
+            } else if (athlete?.id && currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Confirmation");
-            } else if (stravaIsLoggedIn && !isLoggedIn) {
+            } else if (athlete?.id && !currentUser.attributes?.["custom:account_address"]) {
               navigation.navigate("Login");
             } else {
               setPopUpVisible(true);

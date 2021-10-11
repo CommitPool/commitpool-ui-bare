@@ -1,5 +1,6 @@
 import Torus from "@toruslabs/torus-embed";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import { Network } from "../types";
 import { chainByID, chainByNetworkId } from "./chain";
 
 //TODO Detect connected network and notify user to change to Polygon
@@ -9,15 +10,14 @@ import { chainByID, chainByNetworkId } from "./chain";
 
 const isInjected = () => {
   const id = window.ethereum?.chainId;
-  console.log("ID: ", id);
+  console.log("chain ID: ", id);
   return id;
 };
 
-export const attemptInjectedChainData = () =>
+export const attemptInjectedChainData = (): Network =>
   isInjected() ? chainByID(window.ethereum.chainId) : chainByID("137");
 
 const addNetworkProviders = (chainData: Network) => {
-  console.log('ChainData: ', chainData);
   const allProviders: any = {};
   if (!chainData) {
     // this will fire if window.ethereum exists, but the user is on the wrong chain
@@ -40,7 +40,6 @@ const addNetworkProviders = (chainData: Network) => {
 
   if (providersToAdd.includes("torus")) {
     allProviders.torus = {
-      // network: chainData.network,
       package: Torus,
       options: {
         networkParams: {
@@ -62,7 +61,7 @@ const addNetworkProviders = (chainData: Network) => {
 export const getProviderOptions = () =>
   addNetworkProviders(attemptInjectedChainData());
 
-export const deriveChainId = async (provider: any) => {
+export const deriveChainId = (provider: any) => {
   console.log("Deriving chain ID from: ", provider);
   if (provider.isMetaMask || provider.isTorus) {
     return provider.chainId;
@@ -72,7 +71,7 @@ export const deriveChainId = async (provider: any) => {
   }
 };
 
-export const deriveSelectedAddress = (provider: any) => {
+export const deriveSelectedAddress = (provider: any): string | undefined => {
   if (provider.isMetaMask || provider.isTorus) {
     return provider.selectedAddress;
   }
@@ -80,5 +79,5 @@ export const deriveSelectedAddress = (provider: any) => {
   if (provider.wc) {
     return provider.accounts[0];
   }
-  return null;
+  return undefined;
 };

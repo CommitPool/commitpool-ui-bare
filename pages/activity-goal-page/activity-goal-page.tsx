@@ -17,9 +17,9 @@ import {
 
 import strings from "../../resources/strings";
 import globalStyles from "../../resources/styles/styles";
-import { RootState } from "../../redux/store";
 
 import { RootStackParamList } from "..";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 type ActivityGoalPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -32,10 +32,7 @@ type ActivityGoalPageProps = {
 
 const ActivityGoalPage = ({ navigation }: ActivityGoalPageProps) => {
   const [alertVisible, setAlertVisible] = useState<boolean>(false);
-
-  const activitySet: boolean = useSelector(
-    (state: RootState) => state.commitpool.activitySet
-  );
+  const { commitment } = useCommitPool();
 
   return (
     <LayoutContainer>
@@ -59,7 +56,7 @@ const ActivityGoalPage = ({ navigation }: ActivityGoalPageProps) => {
         <Button
           text={strings.footer.next}
           onPress={() =>
-            activitySet ? navigation.navigate("Staking") : setAlertVisible(true)
+            commitment?.activitySet ? navigation.navigate("Staking") : setAlertVisible(true)
           }
         />
         <Button

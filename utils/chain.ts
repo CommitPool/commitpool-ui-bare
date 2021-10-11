@@ -1,3 +1,5 @@
+import { Network } from "../types";
+
 interface SupportedChains {
   [chainId: string]: Network;
 }

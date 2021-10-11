@@ -14,13 +14,12 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import strings from "../../resources/strings";
 import { parseSecondTimestampToFullString } from "../../utils/dateTime";
 
-import useActivities from "../../hooks/useActivities";
 import { BigNumber, Contract, Transaction } from "ethers";
-import useCommitment from "../../hooks/useCommitment";
-import useContracts from "../../hooks/useContracts";
-import useWeb3 from "../../hooks/useWeb3";
-import useStravaAthlete from "../../hooks/useStravaAthlete";
-import useStravaData from "../../hooks/useStravaData";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import { useContracts } from "../../contexts/contractContext";
+import { useStrava } from "../../contexts/stravaContext";
+import { Commitment, TransactionTypes } from "../../types";
+import { useCurrentUser } from "../../contexts/currentUserContext";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -31,44 +30,46 @@ type TrackPageProps = {
   navigation: TrackPageNavigationProps;
 };
 
-//TODO Contr
 const TrackPage = ({ navigation }: TrackPageProps) => {
   // useStravaRefresh();
   const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-  const { activities } = useActivities();
-  const { commitment, activityName, refreshCommitment } = useCommitment();
+  const { activities, commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  const { account, storeTransactionToState, getTransaction } = useWeb3();
-  const { athlete, stravaIsLoggedIn } = useStravaAthlete();
-  const { progress } = useStravaData();
+  const { athlete } = useStrava();
+  const { currentUser, latestTransaction, setLatestTransaction } =
+    useCurrentUser();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
-  const tx: Transaction | undefined = getTransaction(methodCall);
-  console.log("TX: ", tx);
+  const tx: boolean = false;
 
   //TODO manage URL smart when 'undefined'
   const stravaUrl: string = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
     : ``;
-  const txUrl: string = tx?.hash ? `https://polygonscan.com/tx/${tx.hash}` : ``;
+  const txUrl: string = latestTransaction?.txReceipt?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+    : "No transaction found";
 
-  const oracleAddress: string | undefined = activities.find(
-    (activity) => activity.key === commitment.activityKey
-  )?.oracle;
+  //to do - move to env and/or activity state
+  const oracleAddress: string = '0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E';
+  const jobId: string = '692ce2ecba234a3f9a0c579f8bf7a4cb';
 
   const processCommitmentProgress = async () => {
-    if (spcContract && account && oracleAddress) {
+    if (
+      spcContract &&
+      currentUser?.attributes?.["custom:account_address"] &&
+      oracleAddress
+    ) {
       await spcContract
         .requestActivityDistance(
-          account,
+          currentUser.attributes["custom:account_address"],
           oracleAddress,
-          //to do - move to env and/or activity state
-          "9ce5c4e09dda4c3687bac7a2f676268f",
+          jobId,
           { gasLimit: 500000 }
         )
         .then((txReceipt: Transaction) => {
           console.log("requestActivityDistanceTX receipt: ", txReceipt);
-          storeTransactionToState({
+          setLatestTransaction({
             methodCall,
             txReceipt,
           });
@@ -77,18 +78,20 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   };
 
   const listenForActivityDistanceUpdate = (
-    _singlePlayerCommit: Contract | undefined,
-    commitment: Commitment
+    _singlePlayerCommit: Contract,
+    commitment: Partial<Commitment>
   ) => {
-    if (_singlePlayerCommit && commitment) {
+    const now = new Date().getTime() / 1000;
+
+    if (commitment?.endTime) {
       _singlePlayerCommit.on(
         "RequestActivityDistanceFulfilled",
         async (id: string, distance: BigNumber, committer: string) => {
-          const now = new Date().getTime() / 1000;
-
-          if (committer.toLowerCase() === account?.toLowerCase()) {
-            if (now > commitment.endTime) {
-              refreshCommitment();
+          if (
+            committer.toLowerCase() ===
+            currentUser.attributes?.["custom:account_address"].toLowerCase()
+          ) {
+            if (commitment?.endTime && now > commitment.endTime) {
               navigation.navigate("Completion");
             } else {
               setPopUpVisible(true);
@@ -99,7 +102,9 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     }
   };
 
-  listenForActivityDistanceUpdate(spcContract, commitment);
+  if (spcContract && commitment) {
+    listenForActivityDistanceUpdate(spcContract, commitment);
+  }
 
   const onContinue = async () => {
     if (!tx) {
@@ -121,7 +126,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
             <ActivityIndicator size="large" color="#ffffff" />
             <a
               style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-              href={txUrl}
+              // href={txUrl}
               target="_blank"
             >
               View transaction on Polygonscan
@@ -130,31 +135,36 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
         ) : (
           <Fragment>
             <Text text={strings.track.tracking.text} />
-            <View style={styles.commitmentValues}>
-              <Text
-                text={`${activityName} for ${commitment.goalValue} miles`}
-              />
-              <Text
-                text={`from ${parseSecondTimestampToFullString(
-                  commitment.startTime
-                )} to ${parseSecondTimestampToFullString(commitment.endTime)}`}
-              />
-            </View>
-            <View style={styles.commitmentValues}>
-              <Text
-                text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
-              />
-            </View>
-            <View style={styles.commitmentValues}>
-              <Text text={`Progression`} />
-              <ProgressCircle progress={progress} />
-            </View>
+            {commitment?.startTime && commitment?.endTime ? (
+              <Fragment>
+                <View style={styles.commitmentValues}>
+                  <Text
+                    text={`${commitment.activityName} for ${commitment?.goalValue} miles`}
+                  />
+                  <Text
+                    text={`from ${parseSecondTimestampToFullString(
+                      commitment.startTime
+                    )} to ${parseSecondTimestampToFullString(
+                      commitment.endTime
+                    )}`}
+                  />
+                </View>
+
+                <View style={styles.commitmentValues}>
+                  <Text
+                    text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
+                  />
+                  <Text text={`Progression`} />
+                  <ProgressCircle progress={commitment?.progress || 0} />
+                </View>
+              </Fragment>
+            ) : undefined}
           </Fragment>
         )}
       </View>
 
       <View>
-        {stravaIsLoggedIn && athlete?.id !== undefined ? (
+        {athlete?.id ? (
           <a
             style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
             href={stravaUrl}
@@ -188,12 +198,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
   commitmentValues: {
     flex: 1,
     marginTop: 20,
-    alignContent: "flex-start",
+    alignContent: "center",
     alignItems: "center",
   },
   helpButton: {
