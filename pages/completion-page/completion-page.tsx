@@ -82,7 +82,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   return (
     <LayoutContainer>
       {success ? (
-        <ConfettiCannon count={100} origin={{ x: 100, y: 0 }} />
+        <ConfettiCannon count={100} origin={{ x: 100, y: 0 }} fadeOut={true} />
       ) : undefined}
       {loading ? (
         <View style={styles.completionPage}>
