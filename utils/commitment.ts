@@ -32,13 +32,23 @@ const formatActivities = (activities: Activity[]): DropdownItem[] => {
   return formattedActivities;
 };
 
-const parseCommitmentFromContract = (commitment: any, activities: Activity[]): Partial<Commitment> => {
-  const activityName: string = getActivityName(commitment.activityKey, activities);
+const parseCommitmentFromContract = (
+  commitment: any,
+  activities: Activity[]
+): Partial<Commitment> => {
+  const activityName: string = getActivityName(
+    commitment.activityKey,
+    activities
+  );
+
+  const goalValue = Number.parseFloat(commitment.goalValue) / 100;
+  const reportedValue = Number.parseFloat(commitment.reportedValue) / 100;
+  const progress = (reportedValue / goalValue) * 100;
 
   const _commitment: Partial<Commitment> = {
     activityKey: commitment.activityKey,
-    goalValue: Number.parseFloat(commitment.goalValue) / 100,
-    reportedValue: Number.parseFloat(commitment.reportedValue) / 100,
+    goalValue,
+    reportedValue,
     endTime: Number.parseFloat(commitment.endTime.toString()),
     startTime: Number.parseFloat(commitment.startTime.toString()),
     stake: Number.parseFloat(ethers.utils.formatEther(commitment.stake)),
@@ -48,6 +58,7 @@ const parseCommitmentFromContract = (commitment: any, activities: Activity[]): P
     activityName,
     activitySet: true,
     stakeSet: true,
+    progress
   };
 
   return _commitment;
@@ -118,10 +129,18 @@ const validStake = (commitment: Partial<Commitment>): boolean => {
 
 const getCommitmentRequestParameters = (commitment: Partial<Commitment>) => {
   const _activityKey: string | undefined = commitment?.activityKey;
-  const _goalValue: number | undefined = commitment?.goalValue ? Math.floor(commitment.goalValue) * 100 : undefined;
-  const _startTime: number | undefined = commitment?.startTime ? Math.ceil(commitment.startTime) : undefined;
-  const _endTime: number | undefined = commitment?.endTime ? Math.ceil(commitment.endTime) : undefined;
-  const _stake: string | undefined = commitment?.stake ? ethers.utils.parseEther(commitment.stake.toString()).toString() : undefined;
+  const _goalValue: number | undefined = commitment?.goalValue
+    ? Math.floor(commitment.goalValue) * 100
+    : undefined;
+  const _startTime: number | undefined = commitment?.startTime
+    ? Math.ceil(commitment.startTime)
+    : undefined;
+  const _endTime: number | undefined = commitment?.endTime
+    ? Math.ceil(commitment.endTime)
+    : undefined;
+  const _stake: string | undefined = commitment?.stake
+    ? ethers.utils.parseEther(commitment.stake.toString()).toString()
+    : undefined;
   const _depositAmount = _stake;
   return {
     _activityKey,

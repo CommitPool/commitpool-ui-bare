@@ -14,6 +14,7 @@ const DistanceSelector = ({ text }: DistanceSelector) => {
   const onDistanceInput = (value: string) => {
     const distance: number = Number.parseFloat(value);
     if (!isNaN(distance) && distance > 0) {
+      console.log("Setting commitment: ", { ...commitment, goalValue: distance });
       setCommitment({ ...commitment, goalValue: distance });
     }
   };

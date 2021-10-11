@@ -45,6 +45,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
     const address = currentUser.attributes?.["custom:account_address"];
     if (
       address &&
+      commitment?.exists &&
       commitment?.activitySet &&
       commitment?.stakeSet &&
       athlete?.id
@@ -53,6 +54,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
       navigation.navigate("Confirmation");
     } else if (
       address &&
+      commitment?.exists &&
       commitment?.activitySet &&
       commitment?.stakeSet &&
       !athlete?.id

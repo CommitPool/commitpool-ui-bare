@@ -13,6 +13,7 @@ const ActivitySelector = ({ text }: ActivitySelectorProps) => {
   const { formattedActivities, commitment, setCommitment } = useCommitPool();
 
   const onSelect = (activityKey: string) => {
+    console.log("Setting commitment: ", { ...commitment, activityKey });
     setCommitment({ ...commitment, activityKey });
   };
 

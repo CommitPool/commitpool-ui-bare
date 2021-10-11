@@ -2,23 +2,25 @@ import React from "react";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 
 import { Text } from "../../components/";
+import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface CustomProgressCircle {
   progress: number;
 }
 
-const CustomProgressCircle = ({ progress }: CustomProgressCircle) => {
+const CustomProgressCircle = () => {
+  const { commitment } = useCommitPool();
   return (
       <AnimatedCircularProgress
         size={180}
         width={15}
         rotation={0}
-        fill={progress}
+        fill={commitment?.progress || 0}
         tintColor="white"
         onAnimationComplete={() => console.log("onAnimationComplete")}
         backgroundColor="#D45353"
       >
-        {(progress) => <Text text={`${progress.toFixed(1)} %`} />}
+        {() => <Text text={`${commitment?.progress?.toFixed(1) || 0} %`} />}
       </AnimatedCircularProgress>
   );
 };
