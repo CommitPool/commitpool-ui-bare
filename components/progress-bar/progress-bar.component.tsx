@@ -1,58 +1,42 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { HStack, Text } from "@chakra-ui/react";
 
 interface CustomProgressBar {
-  size: number
+  size: number;
 }
 
 const CustomProgressBar = ({ size }: CustomProgressBar) => {
   const steps = [
-    'Activity & Goal',
-    'Set Stake',
-    'Connect Data Source',
-    'Deposit Funds',
-    'Review & Commit',
-    'Commited!'
-  ]
+    "Activity & Goal",
+    "Set Stake",
+    "Connect Data Source",
+    "Deposit Funds",
+    "Review & Commit",
+    "Commited!",
+  ];
   return (
-    <View style={styles.progressBar}>
+    <HStack
+      backgroundColor="rgba(0,0,0,0.4)"
+      backdropFilter="blur(27px)"
+      w="100%"
+      justify="flex-start"
+      borderRadius="10"
+    >
       {steps.map((item, index) => {
         return (
-          <View key={index} style={styles.progressItem}>
-            <Text style={[styles.progressText, size === (index + 1) ? styles.active : null]}>{item}</Text>
-          </View>
-        )
+          <Text
+            key={index}
+            as={size === index + 1 ? "u" : undefined}
+            align="center"
+            fontSize="sm"
+            p={2}
+          >
+            {item}
+          </Text>
+        );
       })}
-    </View>
+    </HStack>
   );
 };
-
-const styles = StyleSheet.create({
-  progressBar: {
-    flex: 1,
-    flexDirection: 'row',
-    width: '100%',
-    maxHeight: 52,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    backdropFilter: "blur(27px)",
-    borderRadius: 10,
-    margin: 10,
-    top: -65
-  },
-  progressItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-    flex: 1,
-    padding: 7
-  },
-  progressText: {
-    color: 'white',
-    fontSize: 16
-  },
-  active: {
-    textDecorationLine: 'underline'
-  }
-});
 
 export default CustomProgressBar;

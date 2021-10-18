@@ -1,18 +1,21 @@
-import React, { Fragment, useState } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import React from "react";
+import { Image } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
-
 import {
-  LayoutContainer,
-  Footer,
+  Box,
   Button,
-  ProgressBar,
+  ButtonGroup,
+  Center,
+  IconButton,
   Text,
-  DialogPopUp,
-} from "../../components";
+  useToast,
+  VStack,
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
+
+import { LayoutContainer, Footer, ProgressBar } from "../../components";
 import { RootStackParamList } from "..";
 
-import globalStyles from "../../resources/styles/styles.js";
 import strings from "../../resources/strings";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
@@ -28,89 +31,78 @@ type ActivitySourcePageProps = {
 };
 
 const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-
-  const { athlete, handleStravaLogin} = useStrava();
+  const toast = useToast();
+  const { athlete, handleStravaLogin } = useStrava();
   const { commitment } = useCommitPool();
   const { currentUser } = useCurrentUser();
+
+  const onNext = () => {
+    {
+      if (
+        commitment?.exists &&
+        athlete?.id &&
+        currentUser.attributes?.["custom:account_address"]
+      ) {
+        navigation.navigate("Track");
+      } else if (
+        athlete?.id &&
+        currentUser.attributes?.["custom:account_address"]
+      ) {
+        navigation.navigate("Confirmation");
+      } else if (
+        athlete?.id &&
+        !currentUser.attributes?.["custom:account_address"]
+      ) {
+        navigation.navigate("Login");
+      } else {
+        toast({
+          title: "No source",
+          description: "It appears you haven't connected your Strava account",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
+      }
+    }
+  };
 
   return (
     <LayoutContainer>
       <ProgressBar size={3} />
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.activitySource.alert}
-      />
-      <Text style={globalStyles.headerOne} text={strings.activitySource.notLoggedIn.text} />
-      <View style={styles.intro}>
+      <Center dir="vertical" h="100%">
         {athlete?.id ? (
-          <Fragment>
-            <Text
-              text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
-            />
-            <Image
-              style={styles.tinyAvatar}
-              source={{ uri: athlete?.profile_medium }}
-            />
-            <Button
-              text={strings.activitySource.loggedIn.button}
-              onPress={() => handleStravaLogin()}
-            />
-          </Fragment>
+          <VStack spacing={6}>
+            <Text>{`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}</Text>
+            <Image source={{ uri: athlete?.profile_medium }} />
+            <Button onClick={() => handleStravaLogin()}>
+              {strings.activitySource.loggedIn.button}
+            </Button>
+          </VStack>
         ) : (
-          <Fragment>
-            <Button
-              text={strings.activitySource.notLoggedIn.button}
-              onPress={() => handleStravaLogin()}
-            />
-          </Fragment>
+          <VStack spacing={6}>
+            <Text>{strings.activitySource.notLoggedIn.text}</Text>
+            <Button onClick={() => handleStravaLogin()}>
+              {strings.activitySource.notLoggedIn.button}
+            </Button>
+          </VStack>
         )}
-      </View>
+      </Center>
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button
-          text={strings.footer.next}
-          onPress={() => {
-            if(commitment?.exists && athlete?.id && currentUser.attributes?.["custom:account_address"]) {
-              navigation.navigate("Track");
-            } else if (athlete?.id && currentUser.attributes?.["custom:account_address"]) {
-              navigation.navigate("Confirmation");
-            } else if (athlete?.id && !currentUser.attributes?.["custom:account_address"]) {
-              navigation.navigate("Login");
-            } else {
-              setPopUpVisible(true);
-            }
-          }}
-        />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next} </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  intro: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tinyAvatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default ActivitySourcePage;

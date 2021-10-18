@@ -1,6 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-
+import { Center, Flex, Container } from "@chakra-ui/react";
 
 interface LayoutContainer {
   children?: React.ReactNode;
@@ -8,41 +7,19 @@ interface LayoutContainer {
 
 const LayoutContainer = ({ children }: LayoutContainer) => {
   return (
-    <View style={styles.layoutContainer}>
-      <View style={styles.testPage}>
-        <View style={styles.actionSection}>
+    <Center
+      backgroundImage="url('https://i.imgur.com/Q1NCXvz.png')"
+      backgroundPosition="50% 50%"
+      backgroundSize="auto 100%"
+      height="100%"
+    >
+      <Container color="white">
+        <Flex flexDir="column" align="center" h="90%" mt="5">
           {children}
-        </View>
-      </View>
-    </View>
-  )
-
+        </Flex>
+      </Container>
+    </Center>
+  );
 };
-
-const styles = StyleSheet.create({
-  layoutContainer: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    backgroundPosition: "50% 50%",
-    backgroundSize: "auto 100%",
-    backgroundImage: "url('https://i.imgur.com/Q1NCXvz.png')",
-  },
-  testPage: {
-    flex: 1,
-    height: "100%",
-    alignItems: "center",
-  },
-  actionSection: {
-    width: "764px",
-    height: "696px",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    backdropFilter: "blur(27px)",
-    borderRadius: 10,
-    top: 165
-  },
-});
 
 export default LayoutContainer;

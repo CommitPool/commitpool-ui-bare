@@ -1,14 +1,22 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
-
 import {
-  LayoutContainer,
-  Footer,
-  Text,
+  Box,
+  useToast,
   Button,
-  ProgressCircle,
-  DialogPopUp,
-} from "../../components";
+  ButtonGroup,
+  Center,
+  CircularProgress,
+  CircularProgressLabel,
+  IconButton,
+  Link,
+  Text,
+  Spacer,
+  VStack,
+} from "@chakra-ui/react";
+import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
+
+import { LayoutContainer, Footer, ProgressBar } from "../../components";
 import { RootStackParamList } from "..";
 import { StackNavigationProp } from "@react-navigation/stack";
 import strings from "../../resources/strings";
@@ -32,8 +40,8 @@ type TrackPageProps = {
 
 const TrackPage = ({ navigation }: TrackPageProps) => {
   // useStravaRefresh();
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-  const { activities, commitment } = useCommitPool();
+  const toast = useToast();
+  const { commitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { athlete } = useStrava();
   const { currentUser, latestTransaction, setLatestTransaction } =
@@ -51,8 +59,8 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     : "No transaction found";
 
   //to do - move to env and/or activity state
-  const oracleAddress: string = '0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E';
-  const jobId: string = '692ce2ecba234a3f9a0c579f8bf7a4cb';
+  const oracleAddress: string = "0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E";
+  const jobId: string = "692ce2ecba234a3f9a0c579f8bf7a4cb";
 
   const processCommitmentProgress = async () => {
     if (
@@ -94,7 +102,15 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
             if (commitment?.endTime && now > commitment.endTime) {
               navigation.navigate("Completion");
             } else {
-              setPopUpVisible(true);
+              toast({
+                title: "Not there yet!",
+                description:
+                  "Keep it up and check back in after your next activity",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+              });
             }
           }
         }
@@ -106,7 +122,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     listenForActivityDistanceUpdate(spcContract, commitment);
   }
 
-  const onContinue = async () => {
+  const onNext = async () => {
     if (!tx) {
       await processCommitmentProgress();
     }
@@ -114,80 +130,70 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.track.alert}
-      />
-      <View style={styles.commitment}>
+      <Center h="90%">
         {tx ? (
-          <Fragment>
-            <Text text="Awaiting transaction processing" />
+          <VStack>
+            <Text>"Awaiting transaction processing"</Text>
             <ActivityIndicator size="large" color="#ffffff" />
-            <a
-              style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-              // href={txUrl}
-              target="_blank"
-            >
-              View transaction on Polygonscan
-            </a>
-          </Fragment>
+            <Link href={txUrl} ISExternal target="_blank">
+              <ExternalLinkIcon mx="2px" /> View transaction on Polygonscan
+            </Link>
+          </VStack>
         ) : (
-          <Fragment>
-            <Text text={strings.track.tracking.text} />
+          <VStack align="center">
+            <Text>{strings.track.tracking.text}</Text>
             {commitment?.startTime && commitment?.endTime ? (
-              <Fragment>
-                <View style={styles.commitmentValues}>
-                  <Text
-                    text={`${commitment.activityName} for ${commitment?.goalValue} miles`}
-                  />
-                  <Text
-                    text={`from ${parseSecondTimestampToFullString(
+              <VStack>
+                <VStack>
+                  <Text>{`${commitment.activityName} for ${commitment?.goalValue} miles`}</Text>
+                  <Text>
+                    {`from ${parseSecondTimestampToFullString(
                       commitment.startTime
                     )} to ${parseSecondTimestampToFullString(
                       commitment.endTime
                     )}`}
-                  />
-                </View>
+                  </Text>
+                </VStack>
 
-                <View style={styles.commitmentValues}>
-                  <Text
-                    text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
-                  />
-                  <Text text={`Progression`} />
-                  <ProgressCircle progress={commitment?.progress || 0} />
-                </View>
-              </Fragment>
+                <Box justify="center">
+                  <Text>{`${strings.track.tracking.stake} ${commitment.stake} DAI`}</Text>
+                  <Text>Progression</Text>
+                  <CircularProgress value={commitment?.progress || 0}>
+                    <CircularProgressLabel>
+                      {commitment?.progress || 0}
+                    </CircularProgressLabel>
+                  </CircularProgress>
+                </Box>
+              </VStack>
             ) : undefined}
-          </Fragment>
+          </VStack>
         )}
-      </View>
+      </Center>
 
-      <View>
+      <Box mb="5">
         {athlete?.id ? (
-          <a
-            style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-            href={stravaUrl}
-            target="_blank"
-          >
-            Open Strava profile
-          </a>
+          <Link href={stravaUrl} isExternal target="_blank">
+            Open Strava Profile <ExternalLinkIcon mx="2px" />
+          </Link>
         ) : (
-          <Button
-            text={"Login to Strava"}
-            onPress={() => navigation.navigate("ActivitySource")}
-          />
+          <Button onClick={() => navigation.navigate("ActivitySource")}>
+            Login to Strava
+          </Button>
         )}
-      </View>
+      </Box>
 
       <Footer>
-        <Button text={"Back"} onPress={() => navigation.goBack()} />
-        <Button text={"Continue"} onPress={() => onContinue()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next} </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );

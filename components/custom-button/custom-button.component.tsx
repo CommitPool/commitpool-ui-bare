@@ -7,6 +7,7 @@ import {
   StyleProp,
   ViewStyle,
 } from "react-native";
+import { Button } from "@chakra-ui/react";
 import { useHover } from "@react-native-aria/interactions";
 
 interface CustomButtonProps {
@@ -16,18 +17,17 @@ interface CustomButtonProps {
 }
 
 const CustomButton = ({ text, onPress, style }: CustomButtonProps) => {
-  const ref = useRef(null);
-  const { isHovered, hoverProps } = useHover({}, ref);
-
-  return (
-    <Pressable
-      ref={ref}
-      onPress={onPress}
-      style={[styles.button, isHovered && styles.hovered, style]}
-    >
-      <Text style={styles.text}>{text}</Text>
-    </Pressable>
-  );
+  // const ref = useRef(null);
+  // const { isHovered, hoverProps } = useHover({}, ref);
+  // <Pressable
+  //   ref={ref}
+  //   onPress={onPress}
+  //   style={[styles.button, isHovered && styles.hovered, style]}
+  // >
+  //   <Text style={styles.text}>{text}</Text>
+  // </Pressable>a
+  const _text = text.trim();
+  return <Button onClick={onPress}>{_text}</Button>;
 };
 
 const styles = StyleSheet.create({

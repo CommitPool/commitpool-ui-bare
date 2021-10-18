@@ -2,18 +2,21 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import React, { Fragment, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
+import { LayoutContainer, Footer, DialogPopUp } from "../../components";
 import {
-  LayoutContainer,
-  Footer,
-  Text,
+  Box,
   Button,
-  DialogPopUp,
-} from "../../components";
+  ButtonGroup,
+  Center,
+  IconButton,
+  Text,
+  useToast
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 
 import strings from "../../resources/strings";
 import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import { useStrava } from "../../contexts/stravaContext";
-import { useContracts } from "../../contexts/contractContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 
@@ -28,7 +31,7 @@ type LoginPageProps = {
 
 const LoginPage = ({ navigation }: LoginPageProps) => {
   const { requestWallet } = useInjectedProvider();
-  const [popUpVisible, setPopUpVisible] = useState(false);
+  const toast = useToast()
 
   const { athlete } = useStrava();
   const { currentUser } = useCurrentUser();
@@ -66,46 +69,44 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
       navigation.navigate("ActivityGoal");
     } else if (!address) {
       //Wallet not yet connected
-      setPopUpVisible(true);
+      toast({
+        title: "No wallet",
+        description: "It appears you have no connected wallet",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top"
+      });
     }
   };
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.login.alert}
-      />
-      <View style={styles.loginPage}>
+      <Center h="100%">
         {currentUser?.attributes?.["custom:account_address"] ? (
-          <View>
-            <Text text={`You're logged in as ${currentUser.username}`} />
-            <Text
-              text={`${Number(currentUser.nativeTokenBalance).toFixed(
-                2
-              )} MATIC`}
-            />
-            <Text text={`${Number(currentUser.daiBalance).toFixed(2)} DAI`} />
-          </View>
+          <Box>
+            <Text>{`You're logged in as ${currentUser.username}`}</Text>
+            <Text>{`${Number(currentUser.nativeTokenBalance).toFixed(
+              2
+            )} MATIC`}</Text>
+            <Text>{`${Number(currentUser.daiBalance).toFixed(2)} DAI`}</Text>
+          </Box>
         ) : (
-          <Fragment>
-            <Text text={strings.login.text} />
-            <Button text={"Click to connect"} onPress={() => requestWallet()} />
-          </Fragment>
+          <Button onClick={() => requestWallet()}>{"Click to connect"}</Button>
         )}
-      </View>
+      </Center>
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button text={strings.footer.next} onPress={() => onNext()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next} </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );

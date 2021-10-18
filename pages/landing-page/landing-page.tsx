@@ -1,59 +1,67 @@
 import { StackNavigationProp } from "@react-navigation/stack";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { ButtonGroup } from "@chakra-ui/react";
 import { RootStackParamList } from "..";
-import { LayoutContainer, Text, Button } from "../../components";
-import { useCurrentUser } from "../../contexts/currentUserContext";
-import { useInjectedProvider } from "../../contexts/injectedProviderContext";
+import { LayoutContainer } from "../../components";
+import { useCommitPool } from "../../contexts/commitPoolContext";
+import {
+  Button,
+  Heading,
+  Text,
+  Spacer,
+  VStack,
+  OrderedList,
+  ListItem,
+} from "@chakra-ui/react";
+
 import strings from "../../resources/strings";
 
-type LandingPageNavigationProps = StackNavigationProp<
-  RootStackParamList,
-  "Landing"
->;
+type TestPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
 
-type LandingPageProps = {
-  navigation: LandingPageNavigationProps;
+type TestPageProps = {
+  navigation: TestPageNavigationProps;
 };
 
-const LandingPage = ({ navigation }: LandingPageProps) => {
-  const { currentUser } = useCurrentUser();
-  const { requestWallet } = useInjectedProvider();
+const TestPage = ({ navigation }: TestPageProps) => {
+  const { setCommitment } = useCommitPool();
 
+  const clearStateAndRoute = () => {
+    setCommitment({});
+    navigation.navigate("ActivityGoal");
+    window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
+  };
   return (
     <LayoutContainer>
-      {console.log("Act: " + currentUser?.username)}
-      {currentUser?.username ? (
-        <View style={styles.landingPage}>
-          <Text text={strings.landing.intro} />
-          <Button
-            text={strings.landing.loggedIn.button}
-            onPress={() => navigation.navigate("Intro")}
-          />
-        </View>
-      ) : (
-        <View style={styles.landingPage}>
-          <Text text={strings.landing.intro} />
-          <Button
-            text={strings.landing.new.button}
-            onPress={() => navigation.navigate("Intro")}
-          />
-          <Button
-            text={strings.landing.reconnect.button}
-            onPress={() => requestWallet()}
-          />
-        </View>
-      )}
+      <Heading>Hold Yourself Accountable</Heading>
+      <Spacer mt="5"/>
+      <VStack h="100%" spacing={6} w="90%">
+        <Text fontSize="2xl">{strings.intro.text}</Text>
+        <OrderedList w="90%" fontSize="1xl" spacing={3}>
+          <ListItem>
+            Set a short term goal and make a commitment to yourself -- e.g. I’m
+            going to bike 50 miles in the next week
+          </ListItem>
+          <ListItem>
+            Stake some money on your ability to keep your commitment -- e.g. $10
+          </ListItem>
+          <ListItem>
+            Get going -- e .g. get biking! If you complete your goal, you get
+            your money back. But if you come up short of your goal, you lose
+            your money.
+          </ListItem>
+        </OrderedList>
+        <Spacer />
+        <ButtonGroup spacing="6">
+          <Button onClick={() => navigation.navigate("Login")}>
+            {strings.landing.reconnect.button}
+          </Button>
+          <Button onClick={() => clearStateAndRoute()}>
+            {strings.landing.getStarted.text}
+          </Button>
+        </ButtonGroup>
+      </VStack>
     </LayoutContainer>
   );
 };
 
-const styles = StyleSheet.create({
-  landingPage: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-
-export default LandingPage;
+export default TestPage;

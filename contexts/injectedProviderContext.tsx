@@ -6,7 +6,8 @@ import React, {
   useRef,
 } from "react";
 import { Network } from "../types";
-import Web3Modal, { providers } from "web3modal";
+import Web3Modal from "web3modal";
+import { useToast } from "@chakra-ui/react";
 
 import { chainByNetworkId, supportedChains } from "../utils/chain";
 import {
@@ -14,7 +15,7 @@ import {
   deriveSelectedAddress,
   getProviderOptions,
 } from "../utils/web3Modal";
-import { ethers, Signer } from "ethers";
+import { ethers} from "ethers";
 
 //TODO refactor to Ethers
 const defaultModal = new Web3Modal({
@@ -46,6 +47,8 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
   const [injectedChain, setInjectedChain] = useState<Network>();
   const [web3Modal, setWeb3Modal] = useState(defaultModal);
   // const { errorToast } = useContext(OverlayContext);
+  const toast = useToast();
+
 
   //Load provider from cache or connect default
   useEffect(() => {
@@ -78,7 +81,14 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
       setAddress(null);
       setWeb3Modal(defaultModal);
       window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
-      // errorToast({ title: 'Could not connect to unsupported network' });
+      toast({
+        title: "Wrong network",
+        description: "If you have MetaMask, make sure it's connected to Polygon. You could use chainlist.org to automagically configure MetaMask",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top"
+      });
       return;
     }
 

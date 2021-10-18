@@ -1,5 +1,7 @@
 import "react-native-gesture-handler";
 import React from "react";
+import { ChakraProvider } from "@chakra-ui/react";
+import theme from "./theme.js";
 
 import { InjectedProvider } from "./contexts/injectedProviderContext";
 import { ContractContextProvider } from "./contexts/contractContext";
@@ -15,7 +17,6 @@ import { Rubik_700Bold } from "@expo-google-fonts/rubik";
 
 import { Header } from "./components/";
 import {
-  TestPage,
   LandingPage,
   IntroPage,
   LoginPage,
@@ -29,6 +30,7 @@ import {
 } from "./pages";
 import { CurrentUserContextProvider } from "./contexts/currentUserContext";
 
+
 const App = () => {
   let [fontsLoaded] = useFonts({
     OpenSans_400Regular,
@@ -41,50 +43,52 @@ const App = () => {
     return <AppLoading />;
   } else {
     return (
-      <InjectedProvider>
-        <ContractContextProvider>
-          <CurrentUserContextProvider>
-            <StravaContextProvider>
-              <CommitPoolContextProvider>
-                    <NavigationContainer>
-                      <Stack.Navigator
-                        initialRouteName="Test"
-                        screenOptions={{
-                          headerTitle: () => <Header />,
-                          headerLeft: () => null,
-                          headerShown: true,
-                          headerTransparent: true,
-                        }}
-                      >
-                        <Stack.Screen name="Login" component={LoginPage} />
-                        <Stack.Screen name="Intro" component={IntroPage} />
-                        <Stack.Screen
-                          name="ActivityGoal"
-                          component={ActivityGoalPage}
-                        />
-                        <Stack.Screen
-                          name="ActivitySource"
-                          component={ActivitySourcePage}
-                        />
-                        <Stack.Screen name="Staking" component={StakingPage} />
-                        <Stack.Screen
-                          name="Confirmation"
-                          component={ConfirmationPage}
-                        />
-                        <Stack.Screen name="Track" component={TrackPage} />
-                        <Stack.Screen
-                          name="Completion"
-                          component={CompletionPage}
-                        />
-                        <Stack.Screen name="Faq" component={FaqPage} />
-                        <Stack.Screen name="Test" component={TestPage} />
-                      </Stack.Navigator>
-                    </NavigationContainer>
-              </CommitPoolContextProvider>
-            </StravaContextProvider>
-          </CurrentUserContextProvider>
-        </ContractContextProvider>
-      </InjectedProvider>
+      <ChakraProvider theme={theme}>
+        <InjectedProvider>
+          <ContractContextProvider>
+            <CurrentUserContextProvider>
+              <StravaContextProvider>
+                <CommitPoolContextProvider>
+                  <NavigationContainer>
+                    <Stack.Navigator
+                      initialRouteName="ActivitySource"
+                      screenOptions={{
+                        headerTitle: () => <Header />,
+                        headerLeft: () => null,
+                        headerShown: true,
+                        headerTransparent: true,
+                      }}
+                    >
+                      <Stack.Screen name="Login" component={LoginPage} />
+                      <Stack.Screen name="Intro" component={IntroPage} />
+                      <Stack.Screen
+                        name="ActivityGoal"
+                        component={ActivityGoalPage}
+                      />
+                      <Stack.Screen
+                        name="ActivitySource"
+                        component={ActivitySourcePage}
+                      />
+                      <Stack.Screen name="Staking" component={StakingPage} />
+                      <Stack.Screen
+                        name="Confirmation"
+                        component={ConfirmationPage}
+                      />
+                      <Stack.Screen name="Track" component={TrackPage} />
+                      <Stack.Screen
+                        name="Completion"
+                        component={CompletionPage}
+                      />
+                      <Stack.Screen name="Faq" component={FaqPage} />
+                      <Stack.Screen name="Landing" component={LandingPage} />
+                    </Stack.Navigator>
+                  </NavigationContainer>
+                </CommitPoolContextProvider>
+              </StravaContextProvider>
+            </CurrentUserContextProvider>
+          </ContractContextProvider>
+        </InjectedProvider>
+      </ChakraProvider>
     );
   }
 };
