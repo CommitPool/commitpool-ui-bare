@@ -10,9 +10,11 @@ import {
   Center,
   IconButton,
   Text,
-  useToast
+  VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { QuestionIcon } from "@chakra-ui/icons";
+import QRCode from "react-native-qrcode-svg";
 
 import strings from "../../resources/strings";
 import { useInjectedProvider } from "../../contexts/injectedProviderContext";
@@ -31,18 +33,18 @@ type LoginPageProps = {
 
 const LoginPage = ({ navigation }: LoginPageProps) => {
   const { requestWallet } = useInjectedProvider();
-  const toast = useToast()
+  const toast = useToast();
 
   const { athlete } = useStrava();
   const { currentUser } = useCurrentUser();
   const { commitment } = useCommitPool();
 
   //When account has an commitment, write to state
-  useEffect(() => {
-    if (commitment?.exists) {
-      navigation.navigate("Track");
-    }
-  }, [commitment]);
+  // useEffect(() => {
+  //   if (commitment?.exists) {
+  //       navigation.navigate("Track")
+  //   }
+  // }, [commitment]);
 
   const onNext = () => {
     const address = currentUser.attributes?.["custom:account_address"];
@@ -75,22 +77,26 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
         status: "error",
         duration: 5000,
         isClosable: true,
-        position: "top"
+        position: "top",
       });
     }
   };
 
   return (
     <LayoutContainer>
-      <Center h="100%">
+      <Center h="100%" justify="center">
         {currentUser?.attributes?.["custom:account_address"] ? (
-          <Box>
-            <Text>{`You're logged in as ${currentUser.username}`}</Text>
+          <VStack spacing={6}>
+            <Text isTruncated width="90%">{`You're logged in as ${currentUser.username?.trim()}`}</Text>
+            <QRCode
+              value={currentUser.attributes["custom:account_address"]}
+              size={225}
+            />
             <Text>{`${Number(currentUser.nativeTokenBalance).toFixed(
               2
             )} MATIC`}</Text>
             <Text>{`${Number(currentUser.daiBalance).toFixed(2)} DAI`}</Text>
-          </Box>
+          </VStack>
         ) : (
           <Button onClick={() => requestWallet()}>{"Click to connect"}</Button>
         )}

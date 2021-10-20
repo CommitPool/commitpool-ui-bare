@@ -1,7 +1,16 @@
 import React from "react";
 
-import { StyleSheet, View, TextInput } from "react-native";
-import { Text } from "..";
+import {
+  Box,
+  Text,
+  HStack,
+  Input,
+  NumberInputField,
+  NumberInput,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from "@chakra-ui/react";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface DistanceSelector {
@@ -14,46 +23,33 @@ const DistanceSelector = ({ text }: DistanceSelector) => {
   const onDistanceInput = (value: string) => {
     const distance: number = Number.parseFloat(value);
     if (!isNaN(distance) && distance > 0) {
-      console.log("Setting commitment: ", { ...commitment, goalValue: distance });
+      console.log("Setting commitment: ", {
+        ...commitment,
+        goalValue: distance,
+      });
       setCommitment({ ...commitment, goalValue: distance });
     }
   };
 
   return (
-    <View style={styles.distanceSelector}>
-      <Text text={text} />
-      <View style={styles.unitInput}>
-        <TextInput
-          defaultValue={commitment?.goalValue?.toString()}
-          keyboardType={"number-pad"}
-          style={styles.textInput}
-          onChangeText={(value) => onDistanceInput(value)}
-        />
-        <Text text="miles" />
-      </View>
-    </View>
+    <HStack>
+      <Text>{text}</Text>
+      <NumberInput
+        maxW="100px"
+        size="sm"
+        defaultValue={commitment?.goalValue || 0}
+        min={0}
+        onChange={(value) => onDistanceInput(value)}
+      >
+        <NumberInputField />
+        <NumberInputStepper>
+          <NumberIncrementStepper />
+          <NumberDecrementStepper />
+        </NumberInputStepper>
+      </NumberInput>
+      <Text>miles</Text>
+    </HStack>
   );
 };
-
-const styles = StyleSheet.create({
-  distanceSelector: {
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textInput: {
-    backgroundColor: "white",
-    fontSize: 14,
-    height: 28,
-    width: 75,
-    textAlign: "center",
-    borderRadius: 6,
-  },
-  unitInput: {
-    margin: 15,
-    flexDirection: "row"
-  }
-});
 
 export default DistanceSelector;

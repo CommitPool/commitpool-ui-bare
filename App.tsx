@@ -51,7 +51,7 @@ const App = () => {
                 <CommitPoolContextProvider>
                   <NavigationContainer>
                     <Stack.Navigator
-                      initialRouteName="ActivitySource"
+                      initialRouteName="Landing"
                       screenOptions={{
                         headerTitle: () => <Header />,
                         headerLeft: () => null,

@@ -1,14 +1,25 @@
 import { StackNavigationProp } from "@react-navigation/stack";
 import React from "react";
-import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
-import { LayoutContainer, Footer, Text, Button } from "../../components";
+import {
+  Box,
+  useToast,
+  Button,
+  ButtonGroup,
+  Center,
+  CircularProgress,
+  CircularProgressLabel,
+  IconButton,
+  Link,
+  Text,
+  Spacer,
+  VStack,
+} from "@chakra-ui/react";
+
+import { LayoutContainer, Footer } from "../../components";
 import strings from "../../resources/strings";
 
-type FaqNavigationProps = StackNavigationProp<
-  RootStackParamList,
-  'Faq'
->;
+type FaqNavigationProps = StackNavigationProp<RootStackParamList, "Faq">;
 
 type FaqPageProps = {
   navigation: FaqNavigationProps;
@@ -17,28 +28,18 @@ type FaqPageProps = {
 const FaqPage = ({ navigation }: FaqPageProps) => {
   return (
     <LayoutContainer>
-      <View style={styles.faqPage}>
-        <Text text={strings.faq.strava} />
-      </View>
-      <View style={styles.faqPage}>
-        <Text text={strings.faq.dai} />
-      </View>
-      <View style={styles.faqPage}>
-        <Text text={strings.faq.staking} />
-      </View>
+      <Text>{strings.faq.strava}</Text>
+      <Text>{strings.faq.dai} </Text>
+      <Text>{strings.faq.staking}</Text>
       <Footer>
-        <Button text={strings.footer.back} onPress={() => navigation.goBack()}/>
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  faqPage: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  }
-});
 
 export default FaqPage;

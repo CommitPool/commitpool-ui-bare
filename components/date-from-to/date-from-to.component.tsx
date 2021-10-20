@@ -1,8 +1,18 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { StyleSheet, View, TextInput } from "react-native";
-
-import { Text } from "..";
+import {
+  Box,
+  Divider,
+  Text,
+  HStack,
+  Input,
+  NumberInputField,
+  NumberInput,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  VStack
+} from "@chakra-ui/react";
 
 import { DateTime } from "luxon";
 
@@ -71,63 +81,49 @@ const DateFromTo = ({ children }: DateFromTo) => {
   };
 
   return (
-    <Fragment>
-      <View style={styles.dateInput}>
-        <Text text={"Starting in"} />
-        <TextInput
-          defaultValue={startIn}
-          keyboardType={"number-pad"}
-          style={styles.textInput}
-          onChangeText={(value) => setStartIn(value)}
-        />
-        <Text text={"days for"} />
-        <TextInput
-          defaultValue={endIn}
-          keyboardType={"number-pad"}
-          style={styles.textInput}
-          onChangeText={(value) => setEndIn(value)}
-        />
-        <Text text={"days"} />
-      </View>
-      <View>
-        <Text
-          text={`Starts on: ${parseSecondTimestampToFullString(
-            commitment?.startTime
-          )} `}
-          style={styles.dateView}
-        />
-        <Text
-          text={`Ends on:  ${parseSecondTimestampToFullString(
-            commitment?.endTime
-          )}`}
-          style={styles.dateView}
-        />
-      </View>
-    </Fragment>
+    <Box>
+      <HStack>
+        <Text>Starting in</Text>
+        <NumberInput
+          w="75px"
+          size="sm"
+          defaultValue={commitment?.goalValue || 0}
+          min={0}
+          onChange={(value) => setStartIn(value)}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        <Text> days for </Text>
+        <NumberInput
+          w="75px"
+          size="sm"
+          defaultValue={commitment?.goalValue || 0}
+          min={0}
+          onChange={(value) => setEndIn(value)}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        <Text>days</Text>
+      </HStack>
+      <Divider mt="2em" mb="2em"/>
+      <VStack>
+        <Text as="em">{`Starts on ${parseSecondTimestampToFullString(
+          commitment?.startTime
+        )} `}</Text>
+        <Text as="em">{`Ends on  ${parseSecondTimestampToFullString(
+          commitment?.endTime
+        )}`}</Text>
+      </VStack>
+    </Box>
   );
 };
-
-const styles = StyleSheet.create({
-  dateInput: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dateView: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textInput: {
-    backgroundColor: "white",
-    fontSize: 14,
-    height: 28,
-    width: 75,
-    textAlign: "center",
-    borderRadius: 6,
-  },
-});
 
 export default DateFromTo;

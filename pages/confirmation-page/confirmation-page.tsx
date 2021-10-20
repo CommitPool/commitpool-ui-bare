@@ -1,11 +1,21 @@
-import React, { Fragment, useState } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import React, { useState } from "react";
+
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  IconButton,
+  Image,
+  Text,
+  useToast,
+  HStack,
+  VStack,
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 
 import {
   LayoutContainer,
   Footer,
-  Text,
-  Button,
   ProgressBar,
   DialogPopUp,
   CommitmentOverview,
@@ -35,7 +45,7 @@ type ConfirmationPageProps = {
 };
 
 const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
+  const toast = useToast();
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment, activities } = useCommitPool();
   const { athlete } = useStrava();
@@ -123,77 +133,67 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
           });
       }
     } else {
-      setPopUpVisible(true);
+      toast({
+        title: "Activity not complete",
+        description: "Please check your values and try again",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     }
   };
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.confirmation.alert}
-      />
-      <ProgressBar size={4 / 6} />
-      <Fragment>
-        <Text
-          text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
-        />
+      <ProgressBar size={5} />
+      <VStack mt={10}>
+        <Text>
+          {`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
+        </Text>
         <Image
-          style={styles.tinyAvatar}
-          source={{ uri: athlete?.profile_medium }}
+          borderRadius="full"
+          boxSize="50px"
+          src={athlete?.profile_medium}
         />
-      </Fragment>
-      <View style={styles.commitmentOverview}>
+      </VStack>
+      <VStack mt="2em" h="80%">
         <CommitmentOverview editing={editMode} />
         {editMode ? (
           <Button
-            text="Set"
-            onPress={() => {
+            onClick={() => {
               setEditMode(false);
             }}
-          />
+          >
+            Set
+          </Button>
         ) : (
           <Button
-            text="Edit"
-            onPress={() => {
+            onClick={() => {
               setEditMode(true);
             }}
-          />
+          >
+            Edit
+          </Button>
         )}
-      </View>
+      </VStack>
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button text={"Confirm"} onPress={async () => createCommitment()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={async () => createCommitment()}>
+            {strings.footer.next}
+          </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  commitmentOverview: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  tinyAvatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default ConfirmationPage;

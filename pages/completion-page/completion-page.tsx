@@ -2,7 +2,23 @@ import React, { Fragment, useEffect, useState } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 
-import { LayoutContainer, Footer, Text, Button } from "../../components";
+import {
+  Box,
+  useToast,
+  Button,
+  ButtonGroup,
+  Center,
+  CircularProgress,
+  CircularProgressLabel,
+  IconButton,
+  Link,
+  Text,
+  Spacer,
+  VStack,
+} from "@chakra-ui/react";
+import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
+
+import { LayoutContainer, Footer } from "../../components";
 import { RootStackParamList } from "..";
 import { StackNavigationProp } from "@react-navigation/stack";
 
@@ -26,12 +42,15 @@ type CompletionPageProps = {
 const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const { commitment } = useCommitPool();
   const { spcContract } = useContracts();
-  const { currentUser, latestTransaction, setLatestTransaction } = useCurrentUser();
+  const { currentUser, latestTransaction, setLatestTransaction } =
+    useCurrentUser();
   const [loading, setLoading] = useState<boolean>(true);
   const [success, setSuccess] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
-  const txUrl: string = latestTransaction.txReceipt?.hash ? `https://polygonscan.com/tx/${latestTransaction.txReceipt?.hash}` : "No Transaction found";
+  const txUrl: string = latestTransaction?.txReceipt?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+    : "No transaction found";
 
   //Check is commitment was met
   useEffect(() => {
@@ -69,7 +88,9 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
       spcContract.on(
         "CommitmentEnded",
         async (committer: string, met: boolean, amountPenalized: number) => {
-          if (committer.toLowerCase() === currentUser?.username?.toLowerCase()) {
+          if (
+            committer.toLowerCase() === currentUser?.username?.toLowerCase()
+          ) {
             navigation.navigate("ActivityGoal");
           }
         }
@@ -81,54 +102,48 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   return (
     <LayoutContainer>
-      {success ? (
-        <ConfettiCannon count={100} origin={{ x: 100, y: 0 }} fadeOut={true} />
+      {loading ? <Text text="Loading" /> : undefined}
+
+      {success && !loading ? (
+        <Box>
+          <ConfettiCannon
+            count={100}
+            origin={{ x: 100, y: 0 }}
+            fadeOut={true}
+          />
+          <Text text={strings.completion.success} />
+        </Box>
       ) : undefined}
-      {loading ? (
-        <View style={styles.completionPage}>
-          <Text text="Loading" />
-        </View>
-      ) : (
-        <View style={styles.completionPage}>
-          {success ? (
-            <Fragment>
-              <Text text={strings.completion.success} />
-            </Fragment>
-          ) : (
-            <Text text={strings.completion.fail} />
-          )}
-          <Text text={achievement} />
-        </View>
-      )}
+
+      {!success && !loading ? (
+        <Text>{strings.completion.fail}</Text>
+      ) : undefined}
+
+      <Text text={achievement} />
+
       {latestTransaction.methodCall === methodCall ? (
-        <Fragment>
+        <Box>
           <Text text="Awaiting transaction processing" />
           <ActivityIndicator size="large" color="#ffffff" />
-          <a
-            style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-            href={txUrl}
-            target="_blank"
-          >
-            View transaction on Polygonscan
-          </a>
-        </Fragment>
+          <Link href={txUrl} isExternal target="_blank">
+            View transaction on PolygonScan <ExternalLinkIcon mx="2px" />
+          </Link>
+        </Box>
       ) : (
         <Button text="Process commitment" onPress={() => onProcess()} />
       )}
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button
-          text={strings.footer.restart}
-          onPress={() => navigation.navigate("ActivityGoal")}
-        />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => navigation.navigate("ActivityGoal")}>Restart</Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );

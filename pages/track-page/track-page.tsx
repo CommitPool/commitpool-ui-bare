@@ -1,5 +1,4 @@
-import React, { Fragment } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
+import React from "react";
 import {
   Box,
   useToast,
@@ -13,6 +12,7 @@ import {
   Text,
   Spacer,
   VStack,
+  Spinner,
 } from "@chakra-ui/react";
 import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
 
@@ -51,12 +51,12 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   const tx: boolean = false;
 
   //TODO manage URL smart when 'undefined'
-  const stravaUrl: string = athlete?.id
+  const stravaUrl = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
-    : ``;
-  const txUrl: string = latestTransaction?.txReceipt?.hash
+    : undefined;
+  const txUrl = latestTransaction?.txReceipt?.hash
     ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
-    : "No transaction found";
+    : undefined;
 
   //to do - move to env and/or activity state
   const oracleAddress: string = "0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E";
@@ -131,18 +131,22 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   return (
     <LayoutContainer>
       <Center h="90%">
-        {tx ? (
-          <VStack>
-            <Text>"Awaiting transaction processing"</Text>
-            <ActivityIndicator size="large" color="#ffffff" />
+        {latestTransaction?.methodCall === methodCall ? (
+          <VStack spacing={15} h="60%">
+            <Text>Awaiting transaction processing</Text>
+            <Spinner size="xl" thickness="5px" speed="1s"/>
             <Link href={txUrl} ISExternal target="_blank">
-              <ExternalLinkIcon mx="2px" /> View transaction on Polygonscan
+              View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
             </Link>
           </VStack>
         ) : (
           <VStack align="center">
             <Text>{strings.track.tracking.text}</Text>
-            {commitment?.startTime && commitment?.endTime ? (
+            {commitment?.startTime &&
+            commitment?.endTime &&
+            commitment?.activityName &&
+            commitment?.goalValue &&
+            commitment?.stake ? (
               <VStack>
                 <VStack>
                   <Text>{`${commitment.activityName} for ${commitment?.goalValue} miles`}</Text>
@@ -158,7 +162,11 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
                 <Box justify="center">
                   <Text>{`${strings.track.tracking.stake} ${commitment.stake} DAI`}</Text>
                   <Text>Progression</Text>
-                  <CircularProgress value={commitment?.progress || 0}>
+                  <CircularProgress
+                    value={commitment?.progress || 0}
+                    size="100px"
+                    thickness="10px"
+                  >
                     <CircularProgressLabel>
                       {commitment?.progress || 0}
                     </CircularProgressLabel>
@@ -171,7 +179,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
       </Center>
 
       <Box mb="5">
-        {athlete?.id ? (
+        {stravaUrl ? (
           <Link href={stravaUrl} isExternal target="_blank">
             Open Strava Profile <ExternalLinkIcon mx="2px" />
           </Link>
@@ -198,24 +206,5 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  commitment: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  commitmentValues: {
-    flex: 1,
-    marginTop: 20,
-    alignContent: "center",
-    alignItems: "center",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default TrackPage;
