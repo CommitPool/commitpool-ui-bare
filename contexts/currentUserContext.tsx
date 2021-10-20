@@ -53,6 +53,16 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
     }
   }, [daiContract, injectedProvider]);
 
+  useEffect(() => {const checkForTxState = async() => {
+    if(latestTransaction?.txReceipt?.hash){
+      const receipt = await injectedProvider.getTransactionReceipt(latestTransaction.txReceipt.hash)
+      if (receipt !== null){
+        setLatestTransaction(receipt);
+      }
+    }
+    checkForTxState();
+  }}, [latestTransaction])
+
   const addUserBalances = async (
     provider: any,
     currentUser: Partial<User>,
