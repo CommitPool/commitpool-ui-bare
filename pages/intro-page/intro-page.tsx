@@ -6,6 +6,7 @@ import { QuestionIcon } from "@chakra-ui/icons";
 
 import { LayoutContainer } from "../../components";
 import strings from "../../resources/strings";
+import usePlausible from "../../hooks/usePlausible";
 
 type IntroPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -17,6 +18,10 @@ type IntroPageProps = {
 };
 
 const IntroPage = ({ navigation }: IntroPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/intro"
+  });
   return (
     <LayoutContainer>
       <Text>{strings.intro.text}</Text>

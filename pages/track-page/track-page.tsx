@@ -28,6 +28,7 @@ import { useContracts } from "../../contexts/contractContext";
 import { useStrava } from "../../contexts/stravaContext";
 import { Commitment, TransactionTypes } from "../../types";
 import { useCurrentUser } from "../../contexts/currentUserContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -39,6 +40,10 @@ type TrackPageProps = {
 };
 
 const TrackPage = ({ navigation }: TrackPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/track"
+  });
   // useStravaRefresh();
   const toast = useToast();
   const { commitment } = useCommitPool();

@@ -20,9 +20,10 @@ import {
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "..";
 
-import globalStyles from "../../resources/styles/styles";
 import strings from "../../resources/strings";
 import { useCommitPool } from "../../contexts/commitPoolContext";
+import usePlausible from "../../hooks/usePlausible";
+
 
 type StakingPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -34,6 +35,10 @@ type StakingPageProps = {
 };
 
 const StakingPage = ({ navigation }: StakingPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/staking"
+  });
   const toast = useToast();
   const { commitment } = useCommitPool();
 

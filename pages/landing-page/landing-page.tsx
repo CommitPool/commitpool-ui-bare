@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 
 import strings from "../../resources/strings";
+import usePlausible from "../../hooks/usePlausible";
 
 type TestPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
 
@@ -24,6 +25,10 @@ type TestPageProps = {
 
 const TestPage = ({ navigation }: TestPageProps) => {
   const { setCommitment } = useCommitPool();
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/landing"
+  });
 
   const clearStateAndRoute = () => {
     setCommitment({});
@@ -33,7 +38,7 @@ const TestPage = ({ navigation }: TestPageProps) => {
   return (
     <LayoutContainer>
       <Heading>Hold Yourself Accountable</Heading>
-      <Spacer mt="5"/>
+      <Spacer mt="5" />
       <VStack h="100%" spacing={6} w="90%">
         <Text fontSize="2xl">{strings.intro.text}</Text>
         <OrderedList w="90%" fontSize="1xl" spacing={3}>

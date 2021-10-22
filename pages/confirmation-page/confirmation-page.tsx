@@ -34,6 +34,7 @@ import { useContracts } from "../../contexts/contractContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -45,6 +46,11 @@ type ConfirmationPageProps = {
 };
 
 const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
+  const { trackPageview, trackEvent} = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/confirmation"
+  });
+
   const toast = useToast();
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment, activities } = useCommitPool();
@@ -54,6 +60,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
   const { daiContract, spcContract } = useContracts();
 
   const createCommitment = async () => {
+    trackEvent('spc_create_commitment')
     if (
       commitment &&
       activities &&

@@ -6,7 +6,6 @@ import {
   ButtonGroup,
   IconButton,
   Heading,
-  Text,
   useToast,
   VStack,
 } from "@chakra-ui/react";
@@ -25,6 +24,7 @@ import strings from "../../resources/strings";
 
 import { RootStackParamList } from "..";
 import { useCommitPool } from "../../contexts/commitPoolContext";
+import usePlausible from "../../hooks/usePlausible"
 
 type ActivityGoalPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -36,6 +36,11 @@ type ActivityGoalPageProps = {
 };
 
 const ActivityGoalPage = ({ navigation }: ActivityGoalPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/activity-goal"
+  });
+
   const toast = useToast();
   const { commitment } = useCommitPool();
 

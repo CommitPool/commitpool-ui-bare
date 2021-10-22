@@ -22,6 +22,7 @@ import strings from "../../resources/strings";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type ActivitySourcePageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -33,6 +34,11 @@ type ActivitySourcePageProps = {
 };
 
 const ActivitySourcePage = ({ navigation }: ActivitySourcePageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/activity-source"
+  });
+
   const toast = useToast();
   const { athlete, handleStravaLogin } = useStrava();
   const { commitment } = useCommitPool();

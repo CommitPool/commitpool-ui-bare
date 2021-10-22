@@ -1,5 +1,5 @@
-import React, { Fragment, useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet,  ActivityIndicator } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 
 import {
@@ -23,12 +23,12 @@ import { RootStackParamList } from "..";
 import { StackNavigationProp } from "@react-navigation/stack";
 
 import strings from "../../resources/strings";
-import { Contract, Transaction } from "ethers";
+import { Transaction } from "ethers";
 import { TransactionTypes } from "../../types";
 import { useContracts } from "../../contexts/contractContext";
-import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type CompletionPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -40,6 +40,11 @@ type CompletionPageProps = {
 };
 
 const CompletionPage = ({ navigation }: CompletionPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/completion"
+  });
+
   const { commitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { currentUser, latestTransaction, setLatestTransaction } =
@@ -48,14 +53,14 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const [success, setSuccess] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
-  const txUrl: string = latestTransaction?.txReceipt?.hash
+  const txUrl  = latestTransaction?.txReceipt?.hash
     ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
     : "No transaction found";
 
   //Check is commitment was met
   useEffect(() => {
     if (loading && commitment?.reportedValue && commitment?.goalValue) {
-      const _success: boolean =
+      const _success  =
         commitment.reportedValue > 0 &&
         commitment.reportedValue >= commitment.goalValue;
       setSuccess(_success);
@@ -63,7 +68,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     }
   }, [commitment, loading]);
 
-  const achievement: string = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
+  const achievement = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
 
   const onProcess = async () => {
     if (currentUser?.username && spcContract) {

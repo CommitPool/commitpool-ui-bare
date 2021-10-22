@@ -2,22 +2,14 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import React from "react";
 import { RootStackParamList } from "..";
 import {
-  Box,
-  useToast,
   Button,
   ButtonGroup,
-  Center,
-  CircularProgress,
-  CircularProgressLabel,
-  IconButton,
-  Link,
   Text,
-  Spacer,
-  VStack,
 } from "@chakra-ui/react";
 
 import { LayoutContainer, Footer } from "../../components";
 import strings from "../../resources/strings";
+import usePlausible from "../../hooks/usePlausible";
 
 type FaqNavigationProps = StackNavigationProp<RootStackParamList, "Faq">;
 
@@ -26,6 +18,11 @@ type FaqPageProps = {
 };
 
 const FaqPage = ({ navigation }: FaqPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/faq"
+  });
+
   return (
     <LayoutContainer>
       <Text>{strings.faq.strava}</Text>

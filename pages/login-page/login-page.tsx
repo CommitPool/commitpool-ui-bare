@@ -1,10 +1,8 @@
 import { StackNavigationProp } from "@react-navigation/stack";
-import React, { Fragment, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React from "react";
 import { RootStackParamList } from "..";
 import { LayoutContainer, Footer, DialogPopUp } from "../../components";
 import {
-  Box,
   Button,
   ButtonGroup,
   Center,
@@ -21,6 +19,7 @@ import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import { useStrava } from "../../contexts/stravaContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type LoginPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -32,6 +31,10 @@ type LoginPageProps = {
 };
 
 const LoginPage = ({ navigation }: LoginPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/login"
+  });
   const { requestWallet } = useInjectedProvider();
   const toast = useToast();
 
@@ -117,17 +120,5 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  loginPage: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default LoginPage;
