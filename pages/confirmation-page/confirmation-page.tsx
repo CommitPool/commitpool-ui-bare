@@ -1,23 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
-  Box,
   Button,
   ButtonGroup,
   IconButton,
   Image,
   Text,
   useToast,
-  HStack,
   VStack,
+  Spinner,
+  Link,
 } from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
 
 import {
   LayoutContainer,
   Footer,
   ProgressBar,
-  DialogPopUp,
   CommitmentOverview,
 } from "../../components";
 import { RootStackParamList } from "..";
@@ -35,6 +34,7 @@ import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
 import usePlausible from "../../hooks/usePlausible";
+import { TransactionTypes } from "../../types";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -46,21 +46,102 @@ type ConfirmationPageProps = {
 };
 
 const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
-  const { trackPageview, trackEvent} = usePlausible();
+  const { trackPageview, trackEvent } = usePlausible();
   trackPageview({
-    url: "https://app.commitpool.com/confirmation"
+    url: "https://app.commitpool.com/confirmation",
   });
 
   const toast = useToast();
+  const [waiting, setWaiting] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const { commitment, activities } = useCommitPool();
   const { athlete } = useStrava();
   const { currentUser, latestTransaction, setLatestTransaction } =
     useCurrentUser();
   const { daiContract, spcContract } = useContracts();
+  const methodCall: TransactionTypes = "depositAndCommit";
+
+  const txUrl = latestTransaction?.txReceipt?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+    : "";
+
+  useEffect(() => {
+    const awaitTransaction = async () => {
+      try {
+        setWaiting(true);
+        latestTransaction.txReceipt
+          .wait()
+          .then((txReceipt: any) => {
+            setLatestTransaction({ methodCall, txReceipt });
+            navigation.navigate("Track");
+          })
+          .catch((err: any) => {
+            console.log(err);
+            setLatestTransaction({ methodCall, txReceipt: err.receipt });
+            toast({
+              title: "Transaction failed",
+              description: "Please check your tx on Polygonscan",
+              status: "error",
+              duration: null,
+              isClosable: false,
+              position: "top",
+            });
+            setWaiting(false);
+          });
+      } catch {
+        setWaiting(false);
+        console.log("Got error on latest Tx: ", latestTransaction);
+      }
+    };
+
+    if (
+      latestTransaction.methodCall === methodCall &&
+      latestTransaction.txReceipt.status === undefined
+    ) {
+      awaitTransaction();
+      toast({
+        title: "Awaiting transaction confirmation",
+        description: "Please hold on",
+        status: "success",
+        duration: null,
+        isClosable: false,
+        position: "top",
+      });
+    }
+
+    if (
+      latestTransaction.methodCall === methodCall &&
+      latestTransaction.txReceipt.status === 0
+    ) {
+      awaitTransaction();
+      toast({
+        title: "Transaction failed",
+        description: "Check your transaction on Polygonscan",
+        status: "error",
+        duration: null,
+        isClosable: true,
+        position: "top",
+      });
+    }
+
+    if (
+      latestTransaction.methodCall === methodCall &&
+      latestTransaction.txReceipt.status === 1
+    ) {
+      awaitTransaction();
+      toast({
+        title: "You're committed!",
+        description: "Let's check your progress",
+        status: "success",
+        duration: null,
+        isClosable: true,
+        position: "top",
+      });
+    }
+  }, [latestTransaction]);
 
   const createCommitment = async () => {
-    trackEvent('spc_create_commitment')
+    trackEvent("spc_create_commitment");
     if (
       commitment &&
       activities &&
@@ -101,7 +182,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
           )
           .then((receipt: Transaction) =>
             setLatestTransaction({
-              methodCall: "depositAndCommit",
+              methodCall,
               txReceipt: receipt,
             })
           );
@@ -131,13 +212,10 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
           )
           .then((receipt: Transaction) =>
             setLatestTransaction({
-              methodCall: "depositAndCommit",
+              methodCall,
               txReceipt: receipt,
             })
-          )
-          .then(() => {
-            navigation.navigate("Track");
-          });
+          );
       }
     } else {
       toast({
@@ -165,23 +243,35 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
         />
       </VStack>
       <VStack mt="2em" h="80%">
-        <CommitmentOverview editing={editMode} />
-        {editMode ? (
-          <Button
-            onClick={() => {
-              setEditMode(false);
-            }}
-          >
-            Set
-          </Button>
+        {waiting ? (
+          <VStack spacing={15} h="60%">
+            <Text>Awaiting transaction processing</Text>
+            <Spinner size="xl" thickness="5px" speed="1s" />
+            <Link href={txUrl} isExternal target="_blank">
+              View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
+            </Link>
+          </VStack>
         ) : (
-          <Button
-            onClick={() => {
-              setEditMode(true);
-            }}
-          >
-            Edit
-          </Button>
+          <VStack>
+            <CommitmentOverview editing={editMode} />
+            {editMode ? (
+              <Button
+                onClick={() => {
+                  setEditMode(false);
+                }}
+              >
+                Set
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setEditMode(true);
+                }}
+              >
+                Edit
+              </Button>
+            )}
+          </VStack>
         )}
       </VStack>
       <Footer>

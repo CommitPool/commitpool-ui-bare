@@ -54,13 +54,13 @@ export type TransactionTypes =
   | "approve"
   | "depositAndCommit"
   | "requestActivityDistance"
-  | "processCommitmentUser";
+  | "processCommitmentUser"
+  | undefined;
 
 export type TransactionDetails = {
-  methodCall: TransactionTypes;
-  txReceipt: Transaction;
+  methodCall: Partial<TransactionTypes>;
+  txReceipt: Partial<Transaction>;
 };
-
 
 export type User = {
   type: string;

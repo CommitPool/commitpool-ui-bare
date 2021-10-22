@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet,  ActivityIndicator } from "react-native";
+import { StyleSheet, ActivityIndicator } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 
 import {
@@ -14,6 +14,7 @@ import {
   Link,
   Text,
   Spacer,
+  Spinner,
   VStack,
 } from "@chakra-ui/react";
 import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
@@ -42,7 +43,7 @@ type CompletionPageProps = {
 const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const { trackPageview } = usePlausible();
   trackPageview({
-    url: "https://app.commitpool.com/completion"
+    url: "https://app.commitpool.com/completion",
   });
 
   const { commitment } = useCommitPool();
@@ -53,14 +54,14 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const [success, setSuccess] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
-  const txUrl  = latestTransaction?.txReceipt?.hash
+  const txUrl = latestTransaction?.txReceipt?.hash
     ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
-    : "No transaction found";
+    : "";
 
   //Check is commitment was met
   useEffect(() => {
     if (loading && commitment?.reportedValue && commitment?.goalValue) {
-      const _success  =
+      const _success =
         commitment.reportedValue > 0 &&
         commitment.reportedValue >= commitment.goalValue;
       setSuccess(_success);
@@ -68,7 +69,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     }
   }, [commitment, loading]);
 
-  const achievement = `You managed to ${commitment?.activityName} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
+  const achievement = `You managed to ${commitment?.activityName?.toLowerCase()} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
 
   const onProcess = async () => {
     if (currentUser?.username && spcContract) {
@@ -107,7 +108,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   return (
     <LayoutContainer>
-      {loading ? <Text text="Loading" /> : undefined}
+      {loading ? <Text>Loading</Text> : undefined}
 
       {success && !loading ? (
         <Box>
@@ -116,7 +117,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
             origin={{ x: 100, y: 0 }}
             fadeOut={true}
           />
-          <Text text={strings.completion.success} />
+          <Text>{strings.completion.success}</Text>
         </Box>
       ) : undefined}
 
@@ -124,25 +125,27 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
         <Text>{strings.completion.fail}</Text>
       ) : undefined}
 
-      <Text text={achievement} />
+      <Text>{achievement}</Text>
 
       {latestTransaction.methodCall === methodCall ? (
-        <Box>
-          <Text text="Awaiting transaction processing" />
-          <ActivityIndicator size="large" color="#ffffff" />
+        <VStack spacing={15} h="60%">
+          <Text>Awaiting transaction processing</Text>
+          <Spinner size="xl" thickness="5px" speed="1s" />
           <Link href={txUrl} isExternal target="_blank">
-            View transaction on PolygonScan <ExternalLinkIcon mx="2px" />
+            View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
           </Link>
-        </Box>
+        </VStack>
       ) : (
-        <Button text="Process commitment" onPress={() => onProcess()} />
+        <Button onClick={() => onProcess()}>Process commitment</Button>
       )}
       <Footer>
         <ButtonGroup>
           <Button onClick={() => navigation.goBack()}>
             {strings.footer.back}
           </Button>
-          <Button onClick={() => navigation.navigate("ActivityGoal")}>Restart</Button>
+          <Button onClick={() => navigation.navigate("ActivityGoal")}>
+            Restart
+          </Button>
           <IconButton
             aria-label="Go to FAQ"
             icon={<QuestionIcon />}

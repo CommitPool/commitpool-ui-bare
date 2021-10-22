@@ -88,7 +88,7 @@ const strings = {
   track: {
     alert: "Commitment not yet complete, keep it up!",
     tracking: {
-      text: "You've committed to the following:",
+      text: "Your commitment",
       activity: "You intend to",
       distance: "for",
       startDate: "from",

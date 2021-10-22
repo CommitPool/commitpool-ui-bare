@@ -1,5 +1,5 @@
 import { StackNavigationProp } from "@react-navigation/stack";
-import React from "react";
+import React, { useEffect } from "react";
 import { RootStackParamList } from "..";
 import { LayoutContainer, Footer, DialogPopUp } from "../../components";
 import {
@@ -43,11 +43,11 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
   const { commitment } = useCommitPool();
 
   //When account has an commitment, write to state
-  // useEffect(() => {
-  //   if (commitment?.exists) {
-  //       navigation.navigate("Track")
-  //   }
-  // }, [commitment]);
+  useEffect(() => {
+    if (commitment?.exists) {
+        navigation.navigate("Track")
+    }
+  }, [commitment]);
 
   const onNext = () => {
     const address = currentUser.attributes?.["custom:account_address"];

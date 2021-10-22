@@ -13,13 +13,15 @@ type CommitPoolContextType = {
   activities?: Activity[];
   commitment?: Partial<Commitment>;
   formattedActivities?: DropdownItem[];
+  refreshCommitment: () => void;
   setCommitment: (commitment: Partial<Commitment>) => void;
 };
 
 export const CommitPoolContext = createContext<CommitPoolContextType>({
-  activities: undefined,
-  commitment: undefined,
-  formattedActivities: undefined,
+  activities: [],
+  commitment: {},
+  formattedActivities: [],
+  refreshCommitment: () => {},
   setCommitment: (commitment: Partial<Commitment>) => {},
 });
 
@@ -43,7 +45,7 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
       console.log(
         `Checking for commitment for account ${currentUser.attributes?.["custom:account_address"]}`
       );
-      refreshCommitment(currentUser, spcContract, activities);
+      refreshCommitment();
     }
   }, [commitment, currentUser, spcContract, activities]);
 
@@ -113,15 +115,15 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
     }
   }, [commitment]);
 
-  const refreshCommitment = async (
-    user: Partial<User>,
-    contract: Contract,
-    activities: Activity[]
-  ) => {
-    if (user.attributes?.["custom:account_address"] && contract) {
+  const refreshCommitment = async () => {
+    if (
+      currentUser.attributes?.["custom:account_address"] &&
+      spcContract &&
+      activities
+    ) {
       console.log("Getting commitment");
-      const _address = user.attributes["custom:account_address"];
-      const commitment = await contract.commitments(_address);
+      const _address = currentUser.attributes["custom:account_address"];
+      const commitment = await spcContract.commitments(_address);
       const _commitment: Partial<Commitment> = parseCommitmentFromContract(
         commitment,
         activities
@@ -133,7 +135,13 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
 
   return (
     <CommitPoolContext.Provider
-      value={{ activities, commitment, formattedActivities, setCommitment }}
+      value={{
+        activities,
+        commitment,
+        formattedActivities,
+        refreshCommitment,
+        setCommitment,
+      }}
     >
       {children}
     </CommitPoolContext.Provider>
@@ -141,7 +149,18 @@ export const CommitPoolContextProvider: React.FC<CommitPoolProps> = ({
 };
 
 export const useCommitPool = () => {
-  const { activities, commitment, formattedActivities, setCommitment } =
-    useContext(CommitPoolContext);
-  return { activities, commitment, formattedActivities, setCommitment };
+  const {
+    activities,
+    commitment,
+    formattedActivities,
+    refreshCommitment,
+    setCommitment,
+  } = useContext(CommitPoolContext);
+  return {
+    activities,
+    commitment,
+    formattedActivities,
+    refreshCommitment,
+    setCommitment,
+  };
 };

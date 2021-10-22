@@ -46,7 +46,6 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
   const [address, setAddress] = useState(null);
   const [injectedChain, setInjectedChain] = useState<Network>();
   const [web3Modal, setWeb3Modal] = useState(defaultModal);
-  // const { errorToast } = useContext(OverlayContext);
   const toast = useToast();
 
 
