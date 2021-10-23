@@ -1,10 +1,13 @@
 import "react-native-gesture-handler";
 import React from "react";
+import { ChakraProvider } from "@chakra-ui/react";
+import theme from "./theme.js";
 
 import { InjectedProvider } from "./contexts/injectedProviderContext";
 import { ContractContextProvider } from "./contexts/contractContext";
 import { CommitPoolContextProvider } from "./contexts/commitPoolContext";
 import { StravaContextProvider } from "./contexts/stravaContext";
+import { PlausibleContextProvider } from "./contexts/plausibleContext";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -15,7 +18,6 @@ import { Rubik_700Bold } from "@expo-google-fonts/rubik";
 
 import { Header } from "./components/";
 import {
-  TestPage,
   LandingPage,
   IntroPage,
   LoginPage,
@@ -41,14 +43,15 @@ const App = () => {
     return <AppLoading />;
   } else {
     return (
-      <InjectedProvider>
-        <ContractContextProvider>
-          <CurrentUserContextProvider>
-            <StravaContextProvider>
-              <CommitPoolContextProvider>
+      <ChakraProvider theme={theme}>
+          <InjectedProvider>
+            <ContractContextProvider>
+              <CurrentUserContextProvider>
+                <StravaContextProvider>
+                  <CommitPoolContextProvider>
                     <NavigationContainer>
                       <Stack.Navigator
-                        initialRouteName="Test"
+                        initialRouteName="Landing"
                         screenOptions={{
                           headerTitle: () => <Header />,
                           headerLeft: () => null,
@@ -77,14 +80,15 @@ const App = () => {
                           component={CompletionPage}
                         />
                         <Stack.Screen name="Faq" component={FaqPage} />
-                        <Stack.Screen name="Test" component={TestPage} />
+                        <Stack.Screen name="Landing" component={LandingPage} />
                       </Stack.Navigator>
                     </NavigationContainer>
-              </CommitPoolContextProvider>
-            </StravaContextProvider>
-          </CurrentUserContextProvider>
-        </ContractContextProvider>
-      </InjectedProvider>
+                  </CommitPoolContextProvider>
+                </StravaContextProvider>
+              </CurrentUserContextProvider>
+            </ContractContextProvider>
+          </InjectedProvider>
+      </ChakraProvider>
     );
   }
 };

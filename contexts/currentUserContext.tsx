@@ -7,16 +7,16 @@ import { useInjectedProvider } from "./injectedProviderContext";
 
 type CurrentUserContextType = {
   currentUser: Partial<User>;
-  latestTransaction: Partial<TransactionDetails>;
+  latestTransaction: TransactionDetails;
   setCurrentUser: (user: Partial<User>) => void;
-  setLatestTransaction: (txDetails: Partial<TransactionDetails>) => void;
+  setLatestTransaction: (txDetails: TransactionDetails) => void;
 };
 
 export const CurrentUserContext = createContext<CurrentUserContextType>({
   currentUser: {},
-  latestTransaction: {},
+  latestTransaction: {methodCall: undefined, txReceipt: undefined},
   setCurrentUser: (user: Partial<User>) => {},
-  setLatestTransaction: (txDetails: Partial<TransactionDetails>) => {},
+  setLatestTransaction: (txDetails: TransactionDetails) => {},
 });
 
 interface CurrentUserProps {
@@ -30,12 +30,13 @@ export const CurrentUserContextProvider: React.FC<CurrentUserProps> = ({
   const [currentUser, setCurrentUser] = useState<Partial<User>>({});
   const { injectedChain, address, injectedProvider } = useInjectedProvider();
   const { daiContract } = useContracts();
-  const [latestTransaction, setLatestTransaction] = useLocalStorage<Partial<TransactionDetails>>(
+  const [latestTransaction, setLatestTransaction] = useLocalStorage<TransactionDetails>(
     "tx",
-    {}
+    {methodCall: undefined, txReceipt: undefined}
   );
 
   console.log("Current user:  ", currentUser);
+  console.log("Latest tx: ", latestTransaction)
 
   useEffect(() => {
     const user: Partial<User> = createWeb3User(

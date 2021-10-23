@@ -47,7 +47,7 @@ const strings = {
   faq: {
     strava: "We use Strava to get...",
     dai: "DAI is a decentralized stablecoin that we use to..",
-    staking: "When you commit DAI to an activity measured via Strava.."
+    staking: "When you commit DAI to an activity measured via Strava..",
   },
   landing: {
     intro: "Welcome to CommitPool",
@@ -58,12 +58,12 @@ const strings = {
       button: "Connect wallet",
     },
     loggedIn: {
-      button: "Continue!"
+      button: "Continue!",
     },
     getStarted: {
       text: "Get Started",
       button: "Get Started",
-    }
+    },
   },
   login: {
     alert: "Mmmmm... It appears you are not yet connected to a wallet",
@@ -73,28 +73,22 @@ const strings = {
     },
   },
   intro: {
-    text: `You have personal goals, but sticking to them is hard. CommitPool is here to help.
-    
-    Here’s how it works;
-    1. Set a short term goal and make a commitment to yourself -- e.g. I’m going to bike 50 miles in the next week
-    
-    2. Stake some money on your ability to keep your commitment -- e.g. $10 
-    
-    3. Get going -- e .g. get biking!
-    
-    If you complete your goal, you get your money back. But if you come up short of your goal, you lose your money.`
+    text: `You have personal goals, but sticking to them is hard. CommitPool is here to help.         Here’s how it works:
+    `,
   },
   staking: {
     alert: "Wut?! It appears you're not staking anything?",
     text: "How much do you want to stake?",
     body1: `Staking money on your commitment will give you an extra push if later you don’t feel like putting in the work`,
     body2: `The more you stake, the bigger the push you’ll give yourself, but the more money you might lose if you don’t meet your goal of biking 50 km by next week`,
-    textHigh: (amount) => {`You're staking ${amount} DAI. That's a big commitment!`}
+    textHigh: (amount) => {
+      `You're staking ${amount} DAI. That's a big commitment!`;
+    },
   },
   track: {
     alert: "Commitment not yet complete, keep it up!",
     tracking: {
-      text: "You've committed to the following:",
+      text: "Your commitment",
       activity: "You intend to",
       distance: "for",
       startDate: "from",

@@ -1,20 +1,22 @@
-import React, { Fragment } from "react";
-import {
-  StyleSheet,
-  StyleProp,
-  TextStyle,
-  View,
-  TextInput,
-} from "react-native";
+import React from "react";
 
-import { Text } from "..";
+import {
+  Box,
+  Text,
+  VStack,
+  HStack,
+  Heading,
+  useToast,
+  NumberInputField,
+  NumberInput,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from "@chakra-ui/react";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 
-interface StakeBoxProps {
-  style?: StyleProp<TextStyle>;
-}
-
-const StakeBox = ({ style }: StakeBoxProps) => {
+const StakeBox = () => {
+  const toast = useToast();
   const { commitment, setCommitment } = useCommitPool();
 
   //TODO toast on invalid input
@@ -28,63 +30,44 @@ const StakeBox = ({ style }: StakeBoxProps) => {
   };
 
   return (
-    <Fragment>
-      <View style={styles.container}>
-        <Text text={"Your stake amount"} />
-        <View style={styles.valueInput}>
-          <TextInput
-            defaultValue={commitment?.stake?.toString()}
-            keyboardType={"number-pad"}
-            style={styles.textInput}
-            onChangeText={(stake) => onStakeInput(stake)}
-          />
-          <Text text={`DAI`} />
-        </View>
-      </View>
-      {commitment?.stake && commitment.stake >= 100 ? (
-        <Text
-          style={styles.textHighAlert}
-          text={`You're staking ${commitment.stake.toString()} DAI. That's a big commitment!`}
-        />
-      ) : undefined}
-    </Fragment>
+    <Box>
+      <HStack spacing={6}>
+        <Heading size="md">Your stake amount</Heading>
+        <HStack>
+          <NumberInput
+            maxW="100px"
+            size="sm"
+            defaultValue={commitment?.stake || 0}
+            min={0}
+            onChange={(value) => onStakeInput(value)}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+          <Text>DAI</Text>
+        </HStack>
+      </HStack>
+      {commitment?.stake && commitment.stake >= 100
+        ? () => {
+            toast({
+              title: "High stakes",
+              description: "You're staking a high amount. Are you sure?",
+              status: "warning",
+              duration: 5000,
+              isClosable: true,
+              position: "top",
+            });
+          }
+        : undefined}
+    </Box>
   );
 };
 
 const validStake = (stake: number) => {
   return stake > 0;
 };
-
-const styles = StyleSheet.create({
-  stakeBox: {
-    color: "white",
-    fontSize: 22,
-    letterSpacing: 1,
-    textAlign: "left",
-    fontFamily: "OpenSans_400Regular",
-    paddingRight: 10,
-    paddingLeft: 10,
-  },
-  valueInput: {
-    flexDirection: "row",
-    marginTop: 20,
-  },
-  textHighAlert: {
-    marginTop: 25,
-    fontWeight: "bold",
-  },
-  textInput: {
-    backgroundColor: "white",
-    fontSize: 14,
-    height: 28,
-    width: 75,
-    textAlign: "center",
-    borderRadius: 6,
-  },
-  container: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default StakeBox;

@@ -1,3 +1,5 @@
+
+
 export interface Commitment {
   activityKey: string;
   exists: boolean;
@@ -54,13 +56,13 @@ export type TransactionTypes =
   | "approve"
   | "depositAndCommit"
   | "requestActivityDistance"
-  | "processCommitmentUser";
+  | "processCommitmentUser"
+  | undefined;
 
 export type TransactionDetails = {
-  methodCall: TransactionTypes;
-  txReceipt: Transaction;
+  methodCall: Partial<TransactionTypes>;
+  tx: Partial<Transaction>;
 };
-
 
 export type User = {
   type: string;

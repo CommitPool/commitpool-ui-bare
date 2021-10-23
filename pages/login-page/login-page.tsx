@@ -1,21 +1,25 @@
 import { StackNavigationProp } from "@react-navigation/stack";
-import React, { Fragment, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useEffect } from "react";
 import { RootStackParamList } from "..";
+import { LayoutContainer, Footer, DialogPopUp } from "../../components";
 import {
-  LayoutContainer,
-  Footer,
-  Text,
   Button,
-  DialogPopUp,
-} from "../../components";
+  ButtonGroup,
+  Center,
+  IconButton,
+  Text,
+  VStack,
+  useToast,
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
+import QRCode from "react-native-qrcode-svg";
 
 import strings from "../../resources/strings";
 import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 import { useStrava } from "../../contexts/stravaContext";
-import { useContracts } from "../../contexts/contractContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
+import usePlausible from "../../hooks/usePlausible";
 
 type LoginPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -27,8 +31,12 @@ type LoginPageProps = {
 };
 
 const LoginPage = ({ navigation }: LoginPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/login"
+  });
   const { requestWallet } = useInjectedProvider();
-  const [popUpVisible, setPopUpVisible] = useState(false);
+  const toast = useToast();
 
   const { athlete } = useStrava();
   const { currentUser } = useCurrentUser();
@@ -37,7 +45,7 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
   //When account has an commitment, write to state
   useEffect(() => {
     if (commitment?.exists) {
-      navigation.navigate("Track");
+        navigation.navigate("Track")
     }
   }, [commitment]);
 
@@ -66,61 +74,51 @@ const LoginPage = ({ navigation }: LoginPageProps) => {
       navigation.navigate("ActivityGoal");
     } else if (!address) {
       //Wallet not yet connected
-      setPopUpVisible(true);
+      toast({
+        title: "No wallet",
+        description: "It appears you have no connected wallet",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     }
   };
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.login.alert}
-      />
-      <View style={styles.loginPage}>
+      <Center h="100%" justify="center">
         {currentUser?.attributes?.["custom:account_address"] ? (
-          <View>
-            <Text text={`You're logged in as ${currentUser.username}`} />
-            <Text
-              text={`${Number(currentUser.nativeTokenBalance).toFixed(
-                2
-              )} MATIC`}
+          <VStack spacing={6}>
+            <Text isTruncated width="90%">{`You're logged in as ${currentUser.username?.trim()}`}</Text>
+            <QRCode
+              value={currentUser.attributes["custom:account_address"]}
+              size={225}
             />
-            <Text text={`${Number(currentUser.daiBalance).toFixed(2)} DAI`} />
-          </View>
+            <Text>{`${Number(currentUser.nativeTokenBalance).toFixed(
+              2
+            )} MATIC`}</Text>
+            <Text>{`${Number(currentUser.daiBalance).toFixed(2)} DAI`}</Text>
+          </VStack>
         ) : (
-          <Fragment>
-            <Text text={strings.login.text} />
-            <Button text={"Click to connect"} onPress={() => requestWallet()} />
-          </Fragment>
+          <Button onClick={() => requestWallet()}>{"Click to connect"}</Button>
         )}
-      </View>
+      </Center>
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button text={strings.footer.next} onPress={() => onNext()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next} </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  loginPage: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default LoginPage;

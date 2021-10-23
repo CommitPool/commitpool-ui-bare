@@ -1,25 +1,30 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { StyleSheet, View } from "react-native";
+import React from "react";
 import { StackNavigationProp } from "@react-navigation/stack";
+
+import {
+  Button,
+  ButtonGroup,
+  IconButton,
+  Heading,
+  useToast,
+  VStack,
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 
 import {
   LayoutContainer,
   Footer,
-  Text,
-  Button,
   ProgressBar,
   ActivitySelector,
   DateFromTo,
   DistanceSelector,
-  DialogPopUp,
 } from "../../components";
 
 import strings from "../../resources/strings";
-import globalStyles from "../../resources/styles/styles";
 
 import { RootStackParamList } from "..";
 import { useCommitPool } from "../../contexts/commitPoolContext";
+import usePlausible from "../../hooks/usePlausible"
 
 type ActivityGoalPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -31,56 +36,50 @@ type ActivityGoalPageProps = {
 };
 
 const ActivityGoalPage = ({ navigation }: ActivityGoalPageProps) => {
-  const [alertVisible, setAlertVisible] = useState<boolean>(false);
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/activity-goal"
+  });
+
+  const toast = useToast();
   const { commitment } = useCommitPool();
 
+  const onNext = () => {
+    commitment?.activitySet
+      ? navigation.navigate("Staking")
+      : toast({
+          title: "Activity not complete",
+          description: "Please check your values and try again",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
+  };
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={alertVisible}
-        onTouchOutside={() => setAlertVisible(false)}
-        text={strings.activityGoal.alert}
-      />
       <ProgressBar size={1} />
-      <View style={styles.setUp}>
-        <Text style={globalStyles.headerOne} text={strings.activityGoal.setUp.text} />
+      <Heading size="md" mt="2em">{strings.activityGoal.setUp.text}</Heading>
+      <VStack h="90%" mt="10" align="flex-start" spacing={6}>
         <ActivitySelector text={strings.activityGoal.setUp.activitySelector} />
         <DistanceSelector text={strings.activityGoal.setUp.distanceSelector} />
         <DateFromTo />
-      </View>
+      </VStack>
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button
-          text={strings.footer.next}
-          onPress={() =>
-            commitment?.activitySet ? navigation.navigate("Staking") : setAlertVisible(true)
-          }
-        />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next}</Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  setUp: {
-    top: -30,
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default ActivityGoalPage;

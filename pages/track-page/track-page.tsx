@@ -1,14 +1,23 @@
-import React, { Fragment, useState } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
-
+import React, { useEffect, useState } from "react";
 import {
-  LayoutContainer,
-  Footer,
-  Text,
+  Box,
+  useToast,
   Button,
-  ProgressCircle,
-  DialogPopUp,
-} from "../../components";
+  ButtonGroup,
+  Center,
+  CircularProgress,
+  CircularProgressLabel,
+  Heading,
+  IconButton,
+  Link,
+  Text,
+  Spacer,
+  VStack,
+  Spinner,
+} from "@chakra-ui/react";
+import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
+
+import { LayoutContainer, Footer, ProgressBar } from "../../components";
 import { RootStackParamList } from "..";
 import { StackNavigationProp } from "@react-navigation/stack";
 import strings from "../../resources/strings";
@@ -20,6 +29,8 @@ import { useContracts } from "../../contexts/contractContext";
 import { useStrava } from "../../contexts/stravaContext";
 import { Commitment, TransactionTypes } from "../../types";
 import { useCurrentUser } from "../../contexts/currentUserContext";
+import usePlausible from "../../hooks/usePlausible";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -31,30 +42,34 @@ type TrackPageProps = {
 };
 
 const TrackPage = ({ navigation }: TrackPageProps) => {
-  // useStravaRefresh();
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
-  const { activities, commitment } = useCommitPool();
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/track",
+  });
+  const toast = useToast();
+  const [waiting, setWaiting] = useState<boolean>(false);
+  const { injectedProvider } = useInjectedProvider();
+  const { commitment, refreshCommitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { athlete } = useStrava();
   const { currentUser, latestTransaction, setLatestTransaction } =
     useCurrentUser();
 
   const methodCall: TransactionTypes = "requestActivityDistance";
-  const tx: boolean = false;
 
   //TODO manage URL smart when 'undefined'
-  const stravaUrl: string = athlete?.id
+  const stravaUrl = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
-    : ``;
-  const txUrl: string = latestTransaction?.txReceipt?.hash
-    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
-    : "No transaction found";
+    : "";
+  const txUrl = latestTransaction?.tx?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction.tx.hash}`
+    : "";
 
   //to do - move to env and/or activity state
-  const oracleAddress: string = '0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E';
-  const jobId: string = '692ce2ecba234a3f9a0c579f8bf7a4cb';
+  const oracleAddress: string = "0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E";
+  const jobId: string = "692ce2ecba234a3f9a0c579f8bf7a4cb";
 
-  const processCommitmentProgress = async () => {
+  const getCommitmentProgress = async () => {
     if (
       spcContract &&
       currentUser?.attributes?.["custom:account_address"] &&
@@ -67,24 +82,24 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
           jobId,
           { gasLimit: 500000 }
         )
-        .then((txReceipt: Transaction) => {
-          console.log("requestActivityDistanceTX receipt: ", txReceipt);
+        .then((tx: Transaction) => {
+          console.log("requestActivityDistanceTX receipt: ", tx);
           setLatestTransaction({
             methodCall,
-            txReceipt,
+            tx,
           });
         });
     }
   };
 
   const listenForActivityDistanceUpdate = (
-    _singlePlayerCommit: Contract,
+    singlePlayerCommit: Contract,
     commitment: Partial<Commitment>
   ) => {
     const now = new Date().getTime() / 1000;
 
     if (commitment?.endTime) {
-      _singlePlayerCommit.on(
+      singlePlayerCommit.on(
         "RequestActivityDistanceFulfilled",
         async (id: string, distance: BigNumber, committer: string) => {
           if (
@@ -94,7 +109,17 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
             if (commitment?.endTime && now > commitment.endTime) {
               navigation.navigate("Completion");
             } else {
-              setPopUpVisible(true);
+              toast({
+                title: "Not there yet!",
+                description:
+                  "Keep it up and check back in after your next activity",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+              });
+              refreshCommitment();
+              setWaiting(false);
             }
           }
         }
@@ -106,110 +131,145 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     listenForActivityDistanceUpdate(spcContract, commitment);
   }
 
-  const onContinue = async () => {
-    if (!tx) {
-      await processCommitmentProgress();
+  useEffect(() => {
+    const awaitTransaction = async () => {
+      setWaiting(true);
+      try {
+        const receipt = await injectedProvider.getTransactionReceipt(
+          latestTransaction.tx.hash
+        );
+
+        if (receipt && receipt.status === 0) {
+          setWaiting(false);
+          toast({
+            title: "Transaction failed",
+            description: "Please check your tx on Polygonscan and try again",
+            status: "error",
+            duration: 5000,
+            isClosable: false,
+            position: "top",
+          });
+        } else if (receipt && receipt.status === 1) {
+          setWaiting(false);
+          toast({
+            title: "Activity progress updated!",
+            description: null,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+            position: "top",
+          });
+        }
+      } catch {
+        console.log("Got error on latest Tx: ", latestTransaction);
+        setWaiting(false);
+      }
+    };
+
+    if (latestTransaction.methodCall === methodCall) {
+      awaitTransaction();
+    }
+  }, [latestTransaction]);
+
+  const onNext = async () => {
+    if (
+      commitment?.reportedValue &&
+      commitment?.goalValue &&
+      commitment.reportedValue > commitment.goalValue
+    ) {
+      navigation.navigate("Completion");
+    } else {
+      await getCommitmentProgress();
     }
   };
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.track.alert}
-      />
-      <View style={styles.commitment}>
-        {tx ? (
-          <Fragment>
-            <Text text="Awaiting transaction processing" />
-            <ActivityIndicator size="large" color="#ffffff" />
-            <a
-              style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-              // href={txUrl}
-              target="_blank"
-            >
-              View transaction on Polygonscan
-            </a>
-          </Fragment>
+      <Center h="90%">
+        {waiting ? (
+          <VStack spacing={15} h="60%">
+            <Text>Awaiting transaction processing</Text>
+            <Spinner size="xl" thickness="5px" speed="1s" />
+            <Link href={txUrl} isExternal target="_blank">
+              View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
+            </Link>
+          </VStack>
         ) : (
-          <Fragment>
-            <Text text={strings.track.tracking.text} />
-            {commitment?.startTime && commitment?.endTime ? (
-              <Fragment>
-                <View style={styles.commitmentValues}>
-                  <Text
-                    text={`${commitment.activityName} for ${commitment?.goalValue} miles`}
-                  />
-                  <Text
-                    text={`from ${parseSecondTimestampToFullString(
-                      commitment.startTime
-                    )} to ${parseSecondTimestampToFullString(
-                      commitment.endTime
-                    )}`}
-                  />
-                </View>
-
-                <View style={styles.commitmentValues}>
-                  <Text
-                    text={`${strings.track.tracking.stake} ${commitment.stake} DAI`}
-                  />
-                  <Text text={`Progression`} />
-                  <ProgressCircle progress={commitment?.progress || 0} />
-                </View>
-              </Fragment>
+          <VStack align="center" w="90%">
+            <Heading size="md">{strings.track.tracking.text}</Heading>
+            {commitment?.startTime &&
+            commitment?.endTime &&
+            commitment?.activityName &&
+            commitment?.goalValue &&
+            commitment?.stake ? (
+              <VStack>
+                <Text as="em">
+                  {`${
+                    strings.confirmation.commitment.activity
+                  } ${commitment?.activityName?.toLowerCase()} `}
+                  {`${strings.confirmation.commitment.distance} ${commitment?.goalValue} miles `}
+                  {`${
+                    strings.confirmation.commitment.startDate
+                  } ${parseSecondTimestampToFullString(
+                    commitment?.startTime
+                  )} `}
+                  {`${
+                    strings.confirmation.commitment.endDate
+                  } ${parseSecondTimestampToFullString(commitment?.endTime)}`}
+                </Text>
+                <Spacer />
+                <Heading size="md">Your stake</Heading>
+                <Text>{`${commitment.stake} DAI`}</Text>
+                <Spacer />
+                <Heading size="md">Your progression</Heading>
+                <CircularProgress
+                  value={commitment?.progress || 0}
+                  size="100px"
+                  thickness="10px"
+                >
+                  <CircularProgressLabel>
+                    {commitment?.progress || 0}
+                  </CircularProgressLabel>
+                </CircularProgress>
+              </VStack>
             ) : undefined}
-          </Fragment>
+          </VStack>
         )}
-      </View>
+      </Center>
 
-      <View>
-        {athlete?.id ? (
-          <a
-            style={{ color: "white", fontFamily: "OpenSans_400Regular" }}
-            href={stravaUrl}
-            target="_blank"
-          >
-            Open Strava profile
-          </a>
+      <Box mb="5">
+        {stravaUrl ? (
+          <Link href={stravaUrl} isExternal target="_blank">
+            Open Strava Profile <ExternalLinkIcon mx="2px" />
+          </Link>
         ) : (
-          <Button
-            text={"Login to Strava"}
-            onPress={() => navigation.navigate("ActivitySource")}
-          />
+          <Button onClick={() => navigation.navigate("ActivitySource")}>
+            Login to Strava
+          </Button>
         )}
-      </View>
+      </Box>
 
       <Footer>
-        <Button text={"Back"} onPress={() => navigation.goBack()} />
-        <Button text={"Continue"} onPress={() => onContinue()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>
+            {commitment?.reportedValue &&
+            commitment?.goalValue &&
+            commitment.reportedValue > commitment.goalValue
+              ? "Process commitment"
+              : "Update progress"}
+          </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  commitment: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  commitmentValues: {
-    flex: 1,
-    marginTop: 20,
-    alignContent: "center",
-    alignItems: "center",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default TrackPage;

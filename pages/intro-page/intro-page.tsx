@@ -1,13 +1,16 @@
 import { StackNavigationProp } from "@react-navigation/stack";
 import React from "react";
-import { StyleSheet, View } from "react-native";
 import { RootStackParamList } from "..";
-import { LayoutContainer, Footer, Text, Button } from "../../components";
+import { Text, Button, IconButton, ButtonGroup } from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
+
+import { LayoutContainer } from "../../components";
 import strings from "../../resources/strings";
+import usePlausible from "../../hooks/usePlausible";
 
 type IntroPageNavigationProps = StackNavigationProp<
   RootStackParamList,
-  'Intro'
+  "Intro"
 >;
 
 type IntroPageProps = {
@@ -15,51 +18,28 @@ type IntroPageProps = {
 };
 
 const IntroPage = ({ navigation }: IntroPageProps) => {
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/intro"
+  });
   return (
     <LayoutContainer>
-       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text text={strings.intro.text} />
-        </View>
-      </View>
-      <View style={styles.footer}>
-        <Button text={strings.footer.back} onPress={() => navigation.goBack()}/>
-        <Button
-          text={strings.footer.start}
-          onPress={() => navigation.navigate("ActivityGoal")}
+      <Text>{strings.intro.text}</Text>
+      <ButtonGroup>
+        <Button onClick={() => navigation.goBack()}>
+          {strings.footer.back}
+        </Button>{" "}
+        <Button onClick={() => navigation.navigate("ActivityGoal")}>
+          {strings.footer.start}
+        </Button>
+        <IconButton
+          aria-label="Go to FAQ"
+          icon={<QuestionIcon />}
+          onClick={() => navigation.navigate("Faq")}
         />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
-      </View>
+      </ButtonGroup>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  container:{
-    flexDirection: 'column',
-    width: "100%",
-    flex: 1,
-    padding: 14
-  },
-  header:{
-    marginBottom: 37
-  },
-  content: {},
-  footer:{
-    alignSelf: "flex-end",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%"
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  }
-});
 
 export default IntroPage;

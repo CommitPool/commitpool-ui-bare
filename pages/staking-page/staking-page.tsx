@@ -1,21 +1,29 @@
-import React, { useState } from "react";
+import React from "react";
+import {
+  Text,
+  Button,
+  ButtonGroup,
+  Divider,
+  Heading,
+  IconButton,
+  VStack,
+  useToast,
+} from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 
-import { StyleSheet, View } from "react-native";
 import {
   LayoutContainer,
   Footer,
-  Button,
-  Text,
   ProgressBar,
-  DialogPopUp,
   StakeBox,
 } from "../../components";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "..";
 
-import globalStyles from "../../resources/styles/styles";
 import strings from "../../resources/strings";
 import { useCommitPool } from "../../contexts/commitPoolContext";
+import usePlausible from "../../hooks/usePlausible";
+
 
 type StakingPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -27,66 +35,55 @@ type StakingPageProps = {
 };
 
 const StakingPage = ({ navigation }: StakingPageProps) => {
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
+  const { trackPageview } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/staking"
+  });
+  const toast = useToast();
   const { commitment } = useCommitPool();
+
+  const onNext = () => {
+    commitment?.stakeSet
+      ? navigation.navigate("ActivitySource")
+      : toast({
+          title: "Stake not set",
+          description: "It appears you have no connected wallet",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
+  };
 
   return (
     <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.staking.alert}
-      />
-      
       <ProgressBar size={2} />
-      <View style={styles.text}>
-        <Text style={globalStyles.headerOne} text={strings.staking.text} />
-        <View style={styles.content}>
-          <Text style={styles.body} text={strings.staking.body1}/>
-          <Text style={styles.body} text={strings.staking.body2}/>
-        </View>
+      <Heading size="md" m="2em">
+        {strings.staking.text}
+      </Heading>
+
+      <VStack h="90%">
+        <Text>{strings.staking.body1}</Text>
+        <Text>{strings.staking.body2}</Text>
+        <Divider mt="3em" mb="3em"/>
         <StakeBox />
-      </View>
+      </VStack>
 
       <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button
-          text={strings.footer.next}
-          onPress={() => {
-            commitment?.stakeSet
-              ? navigation.navigate("ActivitySource")
-              : setPopUpVisible(true)
-          }}
-        />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={() => onNext()}>{strings.footer.next}</Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
       </Footer>
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  text: {
-    flex: 1,
-    alignItems: "center",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-  content: {
-    flex: 0.7,
-    justifyContent: "space-around",
-  },
-  body: {
-    textAlign: "center"
-  }
-});
 
 export default StakingPage;

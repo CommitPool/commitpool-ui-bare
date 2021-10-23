@@ -1,9 +1,7 @@
-import React, { Fragment } from "react";
-import { StyleSheet } from "react-native";
-import { View } from "react-native";
+import React from "react";
+import { Box, Text, VStack, Spacer } from "@chakra-ui/react";
 
 import {
-  Text,
   ActivitySelector,
   DistanceSelector,
   DateFromTo,
@@ -11,7 +9,7 @@ import {
 
 import strings from "../../resources/strings";
 import StakeBox from "../stake-box/stake-box.component";
-import { parseSecondTimestampToFullString} from "../../utils/dateTime"
+import { parseSecondTimestampToFullString } from "../../utils/dateTime";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 
 interface CommitmentOverviewProps {
@@ -21,9 +19,9 @@ interface CommitmentOverviewProps {
 const CommitmentOverview = ({ editing }: CommitmentOverviewProps) => {
   const { commitment } = useCommitPool();
   return (
-    <View style={styles.commitment}>
+    <Box>
       {editing ? (
-        <Fragment>
+        <VStack>
           <ActivitySelector
             text={strings.activityGoal.setUp.activitySelector}
           />
@@ -32,52 +30,31 @@ const CommitmentOverview = ({ editing }: CommitmentOverviewProps) => {
           />
           <DateFromTo />
           <StakeBox />
-        </Fragment>
+        </VStack>
       ) : (
-        <Fragment>
-          <Text text={strings.confirmation.commitment.text} />
-          <View style={styles.commitmentValues}>
-            <Text
-              text={`${strings.confirmation.commitment.activity} ${commitment?.activityName}`}
-            />
-            <Text
-              text={`${strings.confirmation.commitment.distance} ${commitment?.goalValue} miles`}
-            />
-            <Text
-              text={`${
+        <VStack>
+          <Text>{strings.confirmation.commitment.text}</Text>
+          <Box>
+            <Text as="em">
+              {`${
+                strings.confirmation.commitment.activity
+              } ${commitment?.activityName?.toLowerCase()} `}
+              {`${strings.confirmation.commitment.distance} ${commitment?.goalValue} miles `}
+              {`${
                 strings.confirmation.commitment.startDate
-              } ${parseSecondTimestampToFullString(commitment?.startTime)}`}
-            />
-            <Text
-              text={`${
+              } ${parseSecondTimestampToFullString(commitment?.startTime)} `}
+              {`${
                 strings.confirmation.commitment.endDate
               } ${parseSecondTimestampToFullString(commitment?.endTime)}`}
-            />
-          </View>
-          <View style={styles.commitmentValues}>
-            <Text text={strings.confirmation.commitment.stake} />
-
-            <Text text={`${commitment?.stake} DAI`} />
-          </View>
-        </Fragment>
+            </Text>
+          </Box>
+          <Spacer />
+          <Text>{strings.confirmation.commitment.stake} </Text>
+          <Text>{`${commitment?.stake} DAI`}</Text>
+        </VStack>
       )}
-    </View>
+    </Box>
   );
 };
-
-const styles = StyleSheet.create({
-  commitment: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  commitmentValues: {
-    flex: 1,
-    marginTop: 20,
-    alignContent: "flex-start",
-    alignItems: "center",
-  },
-});
 
 export default CommitmentOverview;

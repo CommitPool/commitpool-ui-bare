@@ -13,6 +13,7 @@ import axios from "axios";
 import { useCurrentUser } from "./currentUserContext";
 import { useCommitPool } from "./commitPoolContext";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import usePlausible from "../hooks/usePlausible";
 
 //Strava Credentials
 const clientID: string = "51548&";
@@ -44,6 +45,8 @@ WebBrowser.maybeCompleteAuthSession();
 export const StravaContextProvider: React.FC<StravaProps> = ({
   children,
 }: StravaProps) => {
+  const { trackEvent } = usePlausible();
+
   const [athlete, setAthlete] = useState<Athlete>();
   const { currentUser, setCurrentUser } = useCurrentUser();
   const { commitment, setCommitment } = useCommitPool();
@@ -141,6 +144,8 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
 
   const executeLoginAndSetAthleteUsingAuthCode = async (authCode: string) => {
     console.log("Getting athlete data");
+    trackEvent('strava_get_athlete_data')
+
 
     await axios({
       method: "post",
@@ -256,6 +261,7 @@ export const StravaContextProvider: React.FC<StravaProps> = ({
     commitment: Partial<Commitment>,
     accessToken: string
   ) => {
+    trackEvent('strava_get_activity_data')
     return fetch(
       "https://test2.dcl.properties/activities?startTime=" +
         commitment.startTime +

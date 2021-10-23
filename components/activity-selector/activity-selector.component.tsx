@@ -1,7 +1,7 @@
 import React from "react";
+import { Text, HStack } from "@chakra-ui/react";
 
-import { StyleSheet, View } from "react-native";
-import { Text, DropDownPicker } from "..";
+import { DropDownPicker } from "..";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { DropdownItem } from "../../types";
 
@@ -18,24 +18,14 @@ const ActivitySelector = ({ text }: ActivitySelectorProps) => {
   };
 
   return (
-    <View style={styles.activitySelector}>
-      <Text text={text} />
+    <HStack>
+      <Text>{text}</Text>
       <DropDownPicker
         itemsToSelect={formattedActivities as DropdownItem[]}
         onSelect={onSelect}
       />
-    </View>
+    </HStack>
   );
 };
-
-const styles = StyleSheet.create({
-  activitySelector: {
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-    margin: 18,
-  },
-});
 
 export default ActivitySelector;

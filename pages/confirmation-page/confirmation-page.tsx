@@ -1,13 +1,22 @@
-import React, { Fragment, useState } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+
+import {
+  Button,
+  ButtonGroup,
+  IconButton,
+  Image,
+  Text,
+  useToast,
+  VStack,
+  Spinner,
+  Link,
+} from "@chakra-ui/react";
+import { ExternalLinkIcon, QuestionIcon } from "@chakra-ui/icons";
 
 import {
   LayoutContainer,
   Footer,
-  Text,
-  Button,
   ProgressBar,
-  DialogPopUp,
   CommitmentOverview,
 } from "../../components";
 import { RootStackParamList } from "..";
@@ -24,6 +33,9 @@ import { useContracts } from "../../contexts/contractContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import { useStrava } from "../../contexts/stravaContext";
+import usePlausible from "../../hooks/usePlausible";
+import { TransactionTypes } from "../../types";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 
 type ConfirmationPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -35,15 +47,81 @@ type ConfirmationPageProps = {
 };
 
 const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
-  const [popUpVisible, setPopUpVisible] = useState<boolean>(false);
+  const { trackPageview, trackEvent } = usePlausible();
+  trackPageview({
+    url: "https://app.commitpool.com/confirmation",
+  });
+
+  const toast = useToast();
+  const [waiting, setWaiting] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
-  const { commitment, activities } = useCommitPool();
+  const { injectedProvider } = useInjectedProvider();
+  const { commitment, activities, refreshCommitment } = useCommitPool();
   const { athlete } = useStrava();
   const { currentUser, latestTransaction, setLatestTransaction } =
     useCurrentUser();
   const { daiContract, spcContract } = useContracts();
+  const methodCall: TransactionTypes = "depositAndCommit";
+
+  const txUrl = latestTransaction?.tx?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction.tx.hash}`
+    : "";
+
+  useEffect(() => {
+    const awaitTransaction = async () => {
+      setWaiting(true);
+      try {
+        toast({
+          title: "Awaiting transaction confirmation",
+          description: "Please hold on",
+          status: "success",
+          duration: null,
+          isClosable: true,
+          position: "top",
+        });
+
+        const receipt = await injectedProvider.getTransactionReceipt(
+          latestTransaction.tx.hash
+        );
+
+        if (receipt && receipt.status === 0) {
+          setWaiting(false);
+          toast({
+            title: "Transaction failed",
+            description: "Please check your tx on Polygonscan and try again",
+            status: "error",
+            duration: null,
+            isClosable: false,
+            position: "top",
+          });
+        }
+
+        if (receipt && receipt.status === 1) {
+          toast({
+            title: "You're committed!",
+            description: "Let's check your progress",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+            position: "top",
+          });
+          refreshCommitment();
+          navigation.navigate("Track");
+          setWaiting(false);
+        }
+      } catch {
+        console.log("Got error on latest Tx: ", latestTransaction);
+        setWaiting(false);
+      }
+    };
+
+    if (latestTransaction.methodCall === methodCall) {
+      awaitTransaction();
+    }
+  }, [latestTransaction]);
 
   const createCommitment = async () => {
+    trackEvent("spc_create_commitment");
     if (
       commitment &&
       activities &&
@@ -82,23 +160,32 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             _commitmentParametersWithUserId._userId,
             { gasLimit: 5000000 }
           )
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) => {
+            console.log("Updating latest Tx: ", tx);
             setLatestTransaction({
-              methodCall: "depositAndCommit",
-              txReceipt: receipt,
-            })
-          );
+              methodCall,
+              tx,
+            });
+          });
       } else {
         console.log("Getting allowance with DAI contract: ", daiContract);
 
         await daiContract
           .approve(spcContract.address, _commitmentParametersWithUserId._stake)
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) => {
             setLatestTransaction({
               methodCall: "approve",
-              txReceipt: receipt,
-            })
-          );
+              tx,
+            });
+            toast({
+              title: "DAI approval requested",
+              description: "Let's commit!",
+              status: "success",
+              duration: 5000,
+              isClosable: true,
+              position: "top",
+            });
+          });
 
         console.log("Calling D&C with SPC contract: ", spcContract);
         await spcContract
@@ -112,88 +199,86 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             _commitmentParametersWithUserId._userId,
             { gasLimit: 5000000 }
           )
-          .then((receipt: Transaction) =>
+          .then((tx: Transaction) =>
             setLatestTransaction({
-              methodCall: "depositAndCommit",
-              txReceipt: receipt,
+              methodCall,
+              tx,
             })
-          )
-          .then(() => {
-            navigation.navigate("Track");
-          });
+          );
       }
     } else {
-      setPopUpVisible(true);
+      toast({
+        title: "Activity not complete",
+        description: "Please check your values and try again",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
     }
+    return (
+      <LayoutContainer>
+        <ProgressBar size={5} />
+        <VStack mt={10}>
+          <Text>
+            {`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
+          </Text>
+          <Image
+            borderRadius="full"
+            boxSize="50px"
+            src={athlete?.profile_medium}
+          />
+        </VStack>
+        <VStack mt="2em" h="80%">
+          {waiting ? (
+            <VStack spacing={15} h="60%">
+              <Text>Awaiting transaction processing</Text>
+              <Spinner size="xl" thickness="5px" speed="1s" />
+              <Link href={txUrl} isExternal target="_blank">
+                View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
+              </Link>
+            </VStack>
+          ) : (
+            <VStack>
+              <CommitmentOverview editing={editMode} />
+              {editMode ? (
+                <Button
+                  onClick={() => {
+                    setEditMode(false);
+                  }}
+                >
+                  Set
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setEditMode(true);
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
+            </VStack>
+          )}
+        </VStack>
+        <Footer>
+          <ButtonGroup>
+            <Button onClick={() => navigation.goBack()}>
+              {strings.footer.back}
+            </Button>
+            <Button onClick={async () => createCommitment()}>
+              {strings.footer.next}
+            </Button>
+            <IconButton
+              aria-label="Go to FAQ"
+              icon={<QuestionIcon />}
+              onClick={() => navigation.navigate("Faq")}
+            />
+          </ButtonGroup>
+        </Footer>
+      </LayoutContainer>
+    );
   };
-
-  return (
-    <LayoutContainer>
-      <DialogPopUp
-        visible={popUpVisible}
-        onTouchOutside={() => setPopUpVisible(false)}
-        text={strings.confirmation.alert}
-      />
-      <ProgressBar size={4 / 6} />
-      <Fragment>
-        <Text
-          text={`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
-        />
-        <Image
-          style={styles.tinyAvatar}
-          source={{ uri: athlete?.profile_medium }}
-        />
-      </Fragment>
-      <View style={styles.commitmentOverview}>
-        <CommitmentOverview editing={editMode} />
-        {editMode ? (
-          <Button
-            text="Set"
-            onPress={() => {
-              setEditMode(false);
-            }}
-          />
-        ) : (
-          <Button
-            text="Edit"
-            onPress={() => {
-              setEditMode(true);
-            }}
-          />
-        )}
-      </View>
-      <Footer>
-        <Button
-          text={strings.footer.back}
-          onPress={() => navigation.goBack()}
-        />
-        <Button text={"Confirm"} onPress={async () => createCommitment()} />
-        <Button
-          text={strings.footer.help}
-          onPress={() => navigation.navigate("Faq")}
-          style={styles.helpButton}
-        />
-      </Footer>
-    </LayoutContainer>
-  );
 };
-
-const styles = StyleSheet.create({
-  commitmentOverview: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  tinyAvatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default ConfirmationPage;
