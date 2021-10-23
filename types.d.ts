@@ -1,3 +1,5 @@
+
+
 export interface Commitment {
   activityKey: string;
   exists: boolean;
@@ -59,7 +61,7 @@ export type TransactionTypes =
 
 export type TransactionDetails = {
   methodCall: Partial<TransactionTypes>;
-  txReceipt: Partial<Transaction>;
+  tx: Partial<Transaction>;
 };
 
 export type User = {

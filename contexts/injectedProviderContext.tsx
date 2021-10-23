@@ -81,9 +81,9 @@ export const InjectedProvider: React.FC<InjectedProviderProps> = ({
       setWeb3Modal(defaultModal);
       window.localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
       toast({
-        title: "Wrong network",
+        title: "Wrong network?",
         description: "If you have MetaMask, make sure it's connected to Polygon. You could use chainlist.org to automagically configure MetaMask",
-        status: "error",
+        status: "warning",
         duration: 5000,
         isClosable: true,
         position: "top"

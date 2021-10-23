@@ -30,7 +30,7 @@ import { useStrava } from "../../contexts/stravaContext";
 import { Commitment, TransactionTypes } from "../../types";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import usePlausible from "../../hooks/usePlausible";
-import { DateTime } from "luxon";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 
 type TrackPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -48,6 +48,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   });
   const toast = useToast();
   const [waiting, setWaiting] = useState<boolean>(false);
+  const { injectedProvider } = useInjectedProvider();
   const { commitment, refreshCommitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { athlete } = useStrava();
@@ -60,15 +61,15 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
   const stravaUrl = athlete?.id
     ? `http://www.strava.com/athletes/${athlete.id}`
     : "";
-  const txUrl = latestTransaction?.txReceipt?.hash
-    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+  const txUrl = latestTransaction?.tx?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction.tx.hash}`
     : "";
 
   //to do - move to env and/or activity state
   const oracleAddress: string = "0x0a31078cD57d23bf9e8e8F1BA78356ca2090569E";
   const jobId: string = "692ce2ecba234a3f9a0c579f8bf7a4cb";
 
-  const processCommitmentProgress = async () => {
+  const getCommitmentProgress = async () => {
     if (
       spcContract &&
       currentUser?.attributes?.["custom:account_address"] &&
@@ -81,148 +82,105 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
           jobId,
           { gasLimit: 500000 }
         )
-        .then((txReceipt: Transaction) => {
-          console.log("requestActivityDistanceTX receipt: ", txReceipt);
+        .then((tx: Transaction) => {
+          console.log("requestActivityDistanceTX receipt: ", tx);
           setLatestTransaction({
             methodCall,
-            txReceipt,
+            tx,
           });
         });
     }
   };
 
-  // const listenForActivityDistanceUpdate = (
-  //   _singlePlayerCommit: Contract,
-  //   commitment: Partial<Commitment>
-  // ) => {
-  //   const now = new Date().getTime() / 1000;
+  const listenForActivityDistanceUpdate = (
+    singlePlayerCommit: Contract,
+    commitment: Partial<Commitment>
+  ) => {
+    const now = new Date().getTime() / 1000;
 
-  //   if (commitment?.endTime) {
-  //     _singlePlayerCommit.on(
-  //       "RequestActivityDistanceFulfilled",
-  //       async (id: string, distance: BigNumber, committer: string) => {
-  //         if (
-  //           committer.toLowerCase() ===
-  //           currentUser.attributes?.["custom:account_address"].toLowerCase()
-  //         ) {
-  //           if (commitment?.endTime && now > commitment.endTime) {
-  //             navigation.navigate("Completion");
-  //           } else {
-  //             toast({
-  //               title: "Not there yet!",
-  //               description:
-  //                 "Keep it up and check back in after your next activity",
-  //               status: "warning",
-  //               duration: 5000,
-  //               isClosable: true,
-  //               position: "top",
-  //             });
-  //           }
-  //         }
-  //       }
-  //     );
-  //   }
-  // };
+    if (commitment?.endTime) {
+      singlePlayerCommit.on(
+        "RequestActivityDistanceFulfilled",
+        async (id: string, distance: BigNumber, committer: string) => {
+          if (
+            committer.toLowerCase() ===
+            currentUser.attributes?.["custom:account_address"].toLowerCase()
+          ) {
+            if (commitment?.endTime && now > commitment.endTime) {
+              navigation.navigate("Completion");
+            } else {
+              toast({
+                title: "Not there yet!",
+                description:
+                  "Keep it up and check back in after your next activity",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+              });
+              refreshCommitment();
+              setWaiting(false);
+            }
+          }
+        }
+      );
+    }
+  };
 
-  // if (spcContract && commitment) {
-  //   listenForActivityDistanceUpdate(spcContract, commitment);
-  // }
+  if (spcContract && commitment) {
+    listenForActivityDistanceUpdate(spcContract, commitment);
+  }
 
   useEffect(() => {
     const awaitTransaction = async () => {
+      setWaiting(true);
       try {
-        setWaiting(true);
-        toast({
-          title: "Awaiting transaction confirmation",
-          description: "Please hold on",
-          status: "success",
-          duration: null,
-          isClosable: true,
-          position: "top",
-        });
-        latestTransaction.txReceipt
-          .wait()
-          .then((txReceipt: any) => {
-            setLatestTransaction({ methodCall, txReceipt });
-            setWaiting(false);
-          })
-          .catch((err: any) => {
-            console.log(err);
-            setLatestTransaction({ methodCall, txReceipt: err.receipt });
-            toast({
-              title: "Transaction failed",
-              description: "Please check your tx on Polygonscan",
-              status: "error",
-              duration: null,
-              isClosable: false,
-              position: "top",
-            });
-            setWaiting(false);
-          });
-      } catch (err) {
-        setWaiting(false);
-        toast.closeAll();
-        console.log("Error in latestTx: ", err);
-      }
-    };
+        const receipt = await injectedProvider.getTransactionReceipt(
+          latestTransaction.tx.hash
+        );
 
-    if (
-      latestTransaction.methodCall === methodCall &&
-      latestTransaction.txReceipt.status === undefined
-    ) {
-      awaitTransaction();
-    }
-
-    if (
-      latestTransaction.methodCall === methodCall &&
-      latestTransaction.txReceipt.status === 0
-    ) {
-      toast({
-        title: "Transaction failed",
-        description: "Check your transaction on Polygonscan",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-      setWaiting(false);
-    }
-
-    if (
-      latestTransaction.methodCall === methodCall &&
-      latestTransaction.txReceipt.status === 1
-    ) {
-      toast({
-        title: "Activity updated!",
-        description: "Let's check your progress",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
-      });
-      refreshCommitment();
-      if (commitment?.endTime) {
-        const now = DateTime.now();
-        const endTime = DateTime.fromSeconds(commitment.endTime);
-        const commitmentExpired = now.diff(endTime).as("minutes") > 0;
-        if (commitmentExpired || commitment?.met === true) {
-          navigation.navigate("Completion");
-        } else if (!commitmentExpired && commitment?.met === false) {
+        if (receipt && receipt.status === 0) {
+          setWaiting(false);
           toast({
-            title: "Keep it up!",
-            description: "You still have some time to make it!",
+            title: "Transaction failed",
+            description: "Please check your tx on Polygonscan and try again",
+            status: "error",
+            duration: 5000,
+            isClosable: false,
+            position: "top",
+          });
+        } else if (receipt && receipt.status === 1) {
+          setWaiting(false);
+          toast({
+            title: "Activity progress updated!",
+            description: null,
             status: "success",
             duration: 5000,
             isClosable: true,
             position: "top",
           });
         }
+      } catch {
+        console.log("Got error on latest Tx: ", latestTransaction);
+        setWaiting(false);
       }
+    };
+
+    if (latestTransaction.methodCall === methodCall) {
+      awaitTransaction();
     }
   }, [latestTransaction]);
 
   const onNext = async () => {
-    await processCommitmentProgress();
+    if (
+      commitment?.reportedValue &&
+      commitment?.goalValue &&
+      commitment.reportedValue > commitment.goalValue
+    ) {
+      navigation.navigate("Completion");
+    } else {
+      await getCommitmentProgress();
+    }
   };
 
   return (
@@ -297,7 +255,11 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
             {strings.footer.back}
           </Button>
           <Button onClick={() => onNext()}>
-            {commitment?.met ? "Process commitment" : "Update progress"}{" "}
+            {commitment?.reportedValue &&
+            commitment?.goalValue &&
+            commitment.reportedValue > commitment.goalValue
+              ? "Process commitment"
+              : "Update progress"}
           </Button>
           <IconButton
             aria-label="Go to FAQ"

@@ -8,8 +8,7 @@ import {
   Button,
   ButtonGroup,
   Center,
-  CircularProgress,
-  CircularProgressLabel,
+  Heading,
   IconButton,
   Link,
   Text,
@@ -30,6 +29,7 @@ import { useContracts } from "../../contexts/contractContext";
 import { useCurrentUser } from "../../contexts/currentUserContext";
 import { useCommitPool } from "../../contexts/commitPoolContext";
 import usePlausible from "../../hooks/usePlausible";
+import { useInjectedProvider } from "../../contexts/injectedProviderContext";
 
 type CompletionPageNavigationProps = StackNavigationProp<
   RootStackParamList,
@@ -45,8 +45,11 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   trackPageview({
     url: "https://app.commitpool.com/completion",
   });
+  const [waiting, setWaiting] = useState<boolean>(false);
+  const toast = useToast();
+  const { injectedProvider } = useInjectedProvider();
 
-  const { commitment } = useCommitPool();
+  const { commitment, refreshCommitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { currentUser, latestTransaction, setLatestTransaction } =
     useCurrentUser();
@@ -54,8 +57,8 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   const [success, setSuccess] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
-  const txUrl = latestTransaction?.txReceipt?.hash
-    ? `https://polygonscan.com/tx/${latestTransaction?.txReceipt?.hash}`
+  const txUrl = latestTransaction?.tx?.hash
+    ? `https://polygonscan.com/tx/${latestTransaction.tx.hash}`
     : "";
 
   //Check is commitment was met
@@ -69,20 +72,72 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     }
   }, [commitment, loading]);
 
-  const achievement = `You managed to ${commitment?.activityName?.toLowerCase()} for ${commitment?.reportedValue} miles. You committed to ${commitment?.goalValue} miles`;
+  useEffect(() => {
+    const awaitTransaction = async () => {
+      setWaiting(true);
+      try {
+        toast({
+          title: "Awaiting transaction confirmation",
+          description: "Please hold on",
+          status: "success",
+          duration: null,
+          isClosable: true,
+          position: "top",
+        });
+
+        const receipt = await injectedProvider.getTransactionReceipt(
+          latestTransaction.tx.hash
+        );
+
+        if (receipt && receipt.status === 0) {
+          setWaiting(false);
+          toast({
+            title: "Transaction failed",
+            description: "Please check your tx on Polygonscan and try again",
+            status: "error",
+            duration: null,
+            isClosable: false,
+            position: "top",
+          });
+        }
+
+        if (receipt && receipt.status === 1) {
+          toast({
+            title: "Commitment processed!",
+            description: null,
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+            position: "top",
+          });
+          refreshCommitment();
+          setWaiting(false);
+        }
+      } catch {
+        console.log("Got error on latest Tx: ", latestTransaction);
+        setWaiting(false);
+      }
+    };
+
+    if (latestTransaction.methodCall === methodCall) {
+      awaitTransaction();
+    }
+  }, [latestTransaction]);
+
+  const achievement = `You managed to ${commitment?.activityName?.toLowerCase()} for ${
+    commitment?.reportedValue
+  } miles. You committed to ${commitment?.goalValue} miles`;
 
   const onProcess = async () => {
     if (currentUser?.username && spcContract) {
       console.log("Web3 logged in, calling processCommitmentUser()");
-      await spcContract
-        .processCommitmentUser()
-        .then((txReceipt: Transaction) => {
-          console.log("processCommitmentUserTX receipt: ", txReceipt);
-          setLatestTransaction({
-            methodCall,
-            txReceipt,
-          });
+      await spcContract.processCommitmentUser().then((tx: Transaction) => {
+        console.log("processCommitmentUserTX receipt: ", tx);
+        setLatestTransaction({
+          methodCall,
+          tx,
         });
+      });
     } else {
       console.log("Web3 not logged in, routing to login");
       navigation.navigate("Login");
@@ -97,7 +152,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
           if (
             committer.toLowerCase() === currentUser?.username?.toLowerCase()
           ) {
-            navigation.navigate("ActivityGoal");
+            navigation.navigate("Login");
           }
         }
       );
@@ -108,36 +163,34 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   return (
     <LayoutContainer>
-      {loading ? <Text>Loading</Text> : undefined}
-
       {success && !loading ? (
         <Box>
-          <ConfettiCannon
-            count={100}
-            origin={{ x: 100, y: 0 }}
-            fadeOut={true}
-          />
-          <Text>{strings.completion.success}</Text>
+          <ConfettiCannon count={100} origin={{ x: 0, y: 0 }} fadeOut={true} />
+          <Heading>{strings.completion.success}</Heading>
         </Box>
       ) : undefined}
 
       {!success && !loading ? (
-        <Text>{strings.completion.fail}</Text>
+        <Heading>{strings.completion.fail}</Heading>
       ) : undefined}
 
-      <Text>{achievement}</Text>
+      <VStack h="80%">
+        <Text mt="20%">{achievement}</Text>
 
-      {latestTransaction.methodCall === methodCall ? (
-        <VStack spacing={15} h="60%">
-          <Text>Awaiting transaction processing</Text>
-          <Spinner size="xl" thickness="5px" speed="1s" />
-          <Link href={txUrl} isExternal target="_blank">
-            View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
-          </Link>
-        </VStack>
-      ) : (
-        <Button onClick={() => onProcess()}>Process commitment</Button>
-      )}
+        {latestTransaction.methodCall === methodCall ? (
+          <VStack spacing={15} h="60%">
+            <Text>Awaiting transaction processing</Text>
+            <Spinner size="xl" thickness="5px" speed="1s" />
+            <Link href={txUrl} isExternal target="_blank">
+              View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
+            </Link>
+          </VStack>
+        ) : (
+          <Center h="90%">
+            <Button onClick={() => onProcess()}>Process commitment</Button>
+          </Center>
+        )}
+      </VStack>
       <Footer>
         <ButtonGroup>
           <Button onClick={() => navigation.goBack()}>
@@ -156,18 +209,5 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     </LayoutContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  completionPage: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
-  helpButton: {
-    width: 50,
-    maxWidth: 50,
-  },
-});
 
 export default CompletionPage;

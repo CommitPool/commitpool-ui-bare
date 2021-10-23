@@ -44,13 +44,13 @@ export const ContractContextProvider: React.FC<ContractProps> = ({
 
     const initContract = async () => {
       try {
-        let _daiContract: Contract = new ethers.Contract(
+        let _daiContract  = new ethers.Contract(
           daiAddrs[injectedChain.network],
           daiAbi,
           injectedProvider 
         );
 
-        let _spcContract: Contract = new ethers.Contract(
+        let _spcContract = new ethers.Contract(
           spcAddrs[injectedChain.network],
           spcAbi,
           injectedProvider
