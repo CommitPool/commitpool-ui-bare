@@ -1,7 +1,6 @@
 import Footer from "./footer/footer.component";
 import LayoutContainer from "./layout-container/layout-container.component";
 import ProgressBar from "./progress-bar/progress-bar.component";
-import DropDownPicker from "./custom-dropdown/custom-dropdown.component";
 import ActivitySelector from "./activity-selector/activity-selector.component";
 import DistanceSelector from "./distance-selector/distance-selector.component";
 import DateFromTo from "./date-from-to/date-from-to.component";
@@ -13,7 +12,6 @@ export {
   Footer,
   LayoutContainer,
   ProgressBar,
-  DropDownPicker,
   ActivitySelector,
   DistanceSelector,
   DateFromTo,
