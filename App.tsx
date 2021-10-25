@@ -7,7 +7,6 @@ import { InjectedProvider } from "./contexts/injectedProviderContext";
 import { ContractContextProvider } from "./contexts/contractContext";
 import { CommitPoolContextProvider } from "./contexts/commitPoolContext";
 import { StravaContextProvider } from "./contexts/stravaContext";
-import { PlausibleContextProvider } from "./contexts/plausibleContext";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -16,7 +15,6 @@ import AppLoading from "expo-app-loading";
 import { useFonts, OpenSans_400Regular } from "@expo-google-fonts/open-sans";
 import { Rubik_700Bold } from "@expo-google-fonts/rubik";
 
-import { Header } from "./components/";
 import {
   LandingPage,
   IntroPage,
@@ -51,7 +49,7 @@ const App = () => {
                   <CommitPoolContextProvider>
                     <NavigationContainer>
                       <Stack.Navigator
-                        initialRouteName="ActivityGoal"
+                        initialRouteName="Staking"
                         screenOptions={{
                           headerShown: false,
                         }}
