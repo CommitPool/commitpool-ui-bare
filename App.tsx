@@ -51,7 +51,7 @@ const App = () => {
                   <CommitPoolContextProvider>
                     <NavigationContainer>
                       <Stack.Navigator
-                        initialRouteName="Track"
+                        initialRouteName="Login"
                         screenOptions={{
                           headerShown: false,
                         }}

@@ -45,13 +45,11 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
   });
   const [waiting, setWaiting] = useState<boolean>(false);
   const toast = useToast();
-  const { injectedProvider } = useInjectedProvider();
 
   const { commitment, refreshCommitment } = useCommitPool();
   const { spcContract } = useContracts();
   const { currentUser, latestTransaction, setLatestTransaction } =
     useCurrentUser();
-  const [loading, setLoading] = useState<boolean>(true);
   const [success, setSuccess] = useState<boolean>(false);
 
   const methodCall: TransactionTypes = "processCommitmentUser";
@@ -61,14 +59,13 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   //Check is commitment was met
   useEffect(() => {
-    if (loading && commitment?.reportedValue && commitment?.goalValue) {
+    if (commitment?.reportedValue && commitment?.goalValue) {
       const _success =
         commitment.reportedValue > 0 &&
         commitment.reportedValue >= commitment.goalValue;
       setSuccess(_success);
-      setLoading(false);
     }
-  }, [commitment, loading]);
+  }, [commitment]);
 
   useEffect(() => {
     const awaitTransaction = async () => {
@@ -128,7 +125,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
     if (currentUser?.username && spcContract) {
       console.log("Web3 logged in, calling processCommitmentUser()");
       await spcContract.processCommitmentUser().then((tx: Transaction) => {
-        console.log("processCommitmentUserTX receipt: ", tx);
+        console.log("processCommitmentUserTX: ", tx);
         setLatestTransaction({
           methodCall,
           tx,
@@ -159,21 +156,21 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
 
   return (
     <LayoutContainer>
-      {success && !loading ? (
+      {success && !waiting ? (
         <Box>
           <ConfettiCannon count={100} origin={{ x: 0, y: 0 }} fadeOut={true} />
           <Heading>{strings.completion.success}</Heading>
         </Box>
       ) : undefined}
 
-      {!success && !loading ? (
+      {!success && !waiting ? (
         <Heading>{strings.completion.fail}</Heading>
       ) : undefined}
 
       <VStack h="80%">
         <Text mt="20%">{achievement}</Text>
 
-        {latestTransaction.methodCall === methodCall ? (
+        {latestTransaction.methodCall === methodCall && waiting ? (
           <VStack spacing={15} h="60%">
             <Text>Awaiting transaction processing</Text>
             <Spinner size="xl" thickness="5px" speed="1s" />

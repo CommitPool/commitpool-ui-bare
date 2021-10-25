@@ -81,6 +81,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
         });
 
         const receipt = await latestTransaction.tx.wait()
+        console.log("Receipt: ", receipt)
 
         if (receipt && receipt.status === 0) {
           setWaiting(false);
@@ -110,6 +111,14 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
       } catch {
         console.log("Got error on latest Tx: ", latestTransaction);
         setWaiting(false);
+        toast({
+          title: "Transaction failed",
+          description: "Please check your tx on Polygonscan and try again",
+          status: "error",
+          duration: 5000,
+          isClosable: false,
+          position: "top",
+        });
       }
     };
 
@@ -171,10 +180,6 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
         await daiContract
           .approve(spcContract.address, _commitmentParametersWithUserId._stake)
           .then((tx: Transaction) => {
-            setLatestTransaction({
-              methodCall: "approve",
-              tx,
-            });
             toast({
               title: "DAI approval requested",
               description: "Let's commit!",

@@ -222,11 +222,11 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
                 <Heading size="md">Your progression</Heading>
                 <CircularProgress
                   value={commitment?.progress || 0}
-                  size="100px"
+                  size="150px"
                   thickness="10px"
                 >
-                  <CircularProgressLabel>
-                    {commitment?.progress?.toFixed(1) || 0}
+                  <CircularProgressLabel fontSize="1.5rem">
+                    {commitment?.progress?.toFixed(1) || 0} %
                   </CircularProgressLabel>
                 </CircularProgress>
               </VStack>
