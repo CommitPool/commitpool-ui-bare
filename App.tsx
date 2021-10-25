@@ -49,7 +49,7 @@ const App = () => {
                   <CommitPoolContextProvider>
                     <NavigationContainer>
                       <Stack.Navigator
-                        initialRouteName="Staking"
+                        initialRouteName="Landing"
                         screenOptions={{
                           headerShown: false,
                         }}
