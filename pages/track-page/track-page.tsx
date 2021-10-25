@@ -226,7 +226,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
                   thickness="10px"
                 >
                   <CircularProgressLabel>
-                    {commitment?.progress || 0}
+                    {commitment?.progress?.toFixed(1) || 0}
                   </CircularProgressLabel>
                 </CircularProgress>
               </VStack>
