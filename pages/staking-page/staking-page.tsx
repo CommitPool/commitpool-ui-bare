@@ -64,7 +64,7 @@ const StakingPage = ({ navigation }: StakingPageProps) => {
 
       <VStack h="90%">
         <Text>{strings.staking.body1}</Text>
-        <Text>{strings.staking.body2}</Text>
+        <Text>{`The more you stake, the bigger the push you’ll give yourself, but the more money you might lose if you don’t meet your commitment to ${commitment?.activityName?.toLowerCase()} ${commitment?.goalValue?.toFixed(2)} miles by next week`}</Text>
         <Divider mt="3em" mb="3em"/>
         <StakeBox />
       </VStack>

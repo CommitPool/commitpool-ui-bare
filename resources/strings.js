@@ -80,7 +80,6 @@ const strings = {
     alert: "Wut?! It appears you're not staking anything?",
     text: "How much do you want to stake?",
     body1: `Staking money on your commitment will give you an extra push if later you don’t feel like putting in the work`,
-    body2: `The more you stake, the bigger the push you’ll give yourself, but the more money you might lose if you don’t meet your goal of biking 50 km by next week`,
     textHigh: (amount) => {
       `You're staking ${amount} DAI. That's a big commitment!`;
     },
