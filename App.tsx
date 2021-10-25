@@ -53,10 +53,7 @@ const App = () => {
                       <Stack.Navigator
                         initialRouteName="Landing"
                         screenOptions={{
-                          headerTitle: () => <Header />,
-                          headerLeft: () => null,
-                          headerShown: true,
-                          headerTransparent: true,
+                          headerShown: false,
                         }}
                       >
                         <Stack.Screen name="Login" component={LoginPage} />

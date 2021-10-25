@@ -17,13 +17,13 @@ import {
 import strings from "../../resources/strings";
 import usePlausible from "../../hooks/usePlausible";
 
-type TestPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
+type LandingPageNavigationProps = StackNavigationProp<RootStackParamList, "Test">;
 
-type TestPageProps = {
-  navigation: TestPageNavigationProps;
+type LandingPageProps = {
+  navigation: LandingPageNavigationProps;
 };
 
-const TestPage = ({ navigation }: TestPageProps) => {
+const LandingPage = ({ navigation }: LandingPageProps) => {
   const { setCommitment } = useCommitPool();
   const { trackPageview } = usePlausible();
   trackPageview({
@@ -69,4 +69,4 @@ const TestPage = ({ navigation }: TestPageProps) => {
   );
 };
 
-export default TestPage;
+export default LandingPage; 

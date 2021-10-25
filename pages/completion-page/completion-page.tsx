@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, ActivityIndicator } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
 
 import {
@@ -12,7 +11,6 @@ import {
   IconButton,
   Link,
   Text,
-  Spacer,
   Spinner,
   VStack,
 } from "@chakra-ui/react";
