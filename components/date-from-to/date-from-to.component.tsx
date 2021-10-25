@@ -87,7 +87,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
         <NumberInput
           w="75px"
           size="sm"
-          defaultValue={commitment?.goalValue || 0}
+          defaultValue={startIn}
           min={0}
           onChange={(value) => setStartIn(value)}
         >
@@ -101,7 +101,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
         <NumberInput
           w="75px"
           size="sm"
-          defaultValue={commitment?.goalValue || 0}
+          defaultValue={endIn}
           min={0}
           onChange={(value) => setEndIn(value)}
         >

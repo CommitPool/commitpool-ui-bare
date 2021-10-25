@@ -75,14 +75,12 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
           title: "Awaiting transaction confirmation",
           description: "Please hold on",
           status: "success",
-          duration: null,
+          duration: 5000,
           isClosable: true,
           position: "top",
         });
 
-        const receipt = await injectedProvider.getTransactionReceipt(
-          latestTransaction.tx.hash
-        );
+        const receipt = await latestTransaction.tx.wait()
 
         if (receipt && receipt.status === 0) {
           setWaiting(false);
@@ -90,7 +88,7 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
             title: "Transaction failed",
             description: "Please check your tx on Polygonscan and try again",
             status: "error",
-            duration: null,
+            duration: 5000,
             isClosable: false,
             position: "top",
           });
@@ -216,69 +214,69 @@ const ConfirmationPage = ({ navigation }: ConfirmationPageProps) => {
         position: "top",
       });
     }
-    return (
-      <LayoutContainer>
-        <ProgressBar size={5} />
-        <VStack mt={10}>
-          <Text>
-            {`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
-          </Text>
-          <Image
-            borderRadius="full"
-            boxSize="50px"
-            src={athlete?.profile_medium}
-          />
-        </VStack>
-        <VStack mt="2em" h="80%">
-          {waiting ? (
-            <VStack spacing={15} h="60%">
-              <Text>Awaiting transaction processing</Text>
-              <Spinner size="xl" thickness="5px" speed="1s" />
-              <Link href={txUrl} isExternal target="_blank">
-                View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
-              </Link>
-            </VStack>
-          ) : (
-            <VStack>
-              <CommitmentOverview editing={editMode} />
-              {editMode ? (
-                <Button
-                  onClick={() => {
-                    setEditMode(false);
-                  }}
-                >
-                  Set
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => {
-                    setEditMode(true);
-                  }}
-                >
-                  Edit
-                </Button>
-              )}
-            </VStack>
-          )}
-        </VStack>
-        <Footer>
-          <ButtonGroup>
-            <Button onClick={() => navigation.goBack()}>
-              {strings.footer.back}
-            </Button>
-            <Button onClick={async () => createCommitment()}>
-              {strings.footer.next}
-            </Button>
-            <IconButton
-              aria-label="Go to FAQ"
-              icon={<QuestionIcon />}
-              onClick={() => navigation.navigate("Faq")}
-            />
-          </ButtonGroup>
-        </Footer>
-      </LayoutContainer>
-    );
   };
+  return (
+    <LayoutContainer>
+      <ProgressBar size={5} />
+      <VStack mt={10}>
+        <Text>
+          {`${strings.activitySource.loggedIn.text} ${athlete?.firstname}`}
+        </Text>
+        <Image
+          borderRadius="full"
+          boxSize="50px"
+          src={athlete?.profile_medium}
+        />
+      </VStack>
+      <VStack mt="2em" h="80%">
+        {waiting ? (
+          <VStack spacing={15} h="60%">
+            <Text>Awaiting transaction processing</Text>
+            <Spinner size="xl" thickness="5px" speed="1s" />
+            <Link href={txUrl} isExternal target="_blank">
+              View transaction on Polygonscan <ExternalLinkIcon mx="2px" />
+            </Link>
+          </VStack>
+        ) : (
+          <VStack>
+            <CommitmentOverview editing={editMode} />
+            {editMode ? (
+              <Button
+                onClick={() => {
+                  setEditMode(false);
+                }}
+              >
+                Set
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setEditMode(true);
+                }}
+              >
+                Edit
+              </Button>
+            )}
+          </VStack>
+        )}
+      </VStack>
+      <Footer>
+        <ButtonGroup>
+          <Button onClick={() => navigation.goBack()}>
+            {strings.footer.back}
+          </Button>
+          <Button onClick={async () => createCommitment()}>
+            {strings.footer.next}
+          </Button>
+          <IconButton
+            aria-label="Go to FAQ"
+            icon={<QuestionIcon />}
+            onClick={() => navigation.navigate("Faq")}
+          />
+        </ButtonGroup>
+      </Footer>
+    </LayoutContainer>
+  );
 };
 
 export default ConfirmationPage;

@@ -135,9 +135,7 @@ const TrackPage = ({ navigation }: TrackPageProps) => {
     const awaitTransaction = async () => {
       setWaiting(true);
       try {
-        const receipt = await injectedProvider.getTransactionReceipt(
-          latestTransaction.tx.hash
-        );
+        const receipt = await latestTransaction.tx.wait();
 
         if (receipt && receipt.status === 0) {
           setWaiting(false);

@@ -85,9 +85,7 @@ const CompletionPage = ({ navigation }: CompletionPageProps) => {
           position: "top",
         });
 
-        const receipt = await injectedProvider.getTransactionReceipt(
-          latestTransaction.tx.hash
-        );
+        const receipt = await latestTransaction.tx.wait();
 
         if (receipt && receipt.status === 0) {
           setWaiting(false);
