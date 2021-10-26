@@ -49,7 +49,7 @@ const App = () => {
                   <CommitPoolContextProvider>
                     <NavigationContainer>
                       <Stack.Navigator
-                        initialRouteName="Landing"
+                        initialRouteName="Confirmation"
                         screenOptions={{
                           headerShown: false,
                         }}

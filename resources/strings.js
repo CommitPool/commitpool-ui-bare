@@ -73,7 +73,7 @@ const strings = {
     },
   },
   intro: {
-    text: `You have personal goals, but sticking to them is hard. CommitPool is here to help.         Here’s how it works:
+    text: `You have personal goals, but sticking to them is hard. CommitPool is here to help.
     `,
   },
   staking: {

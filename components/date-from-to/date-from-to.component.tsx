@@ -120,7 +120,7 @@ const DateFromTo = ({ children }: DateFromTo) => {
         )} `}</Text>
         <Text as="em">{`Ends on  ${parseSecondTimestampToFullString(
           commitment?.endTime
-        )}`}</Text>
+        )} (end of day)`}</Text>
       </VStack>
     </Box>
   );

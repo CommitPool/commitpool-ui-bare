@@ -45,7 +45,7 @@ const CommitmentOverview = ({ editing }: CommitmentOverviewProps) => {
               } ${parseSecondTimestampToFullString(commitment?.startTime)} `}
               {`${
                 strings.confirmation.commitment.endDate
-              } ${parseSecondTimestampToFullString(commitment?.endTime)}`}
+              } ${parseSecondTimestampToFullString(commitment?.endTime)} (end of day)`}
             </Text>
           </Box>
           <Spacer />
